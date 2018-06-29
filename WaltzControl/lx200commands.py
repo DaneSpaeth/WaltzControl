@@ -743,8 +743,22 @@ class Lx200Commands(com.CommunicationCommands):
             return True
         else:
             return False
+    
+    def park_telescope(self):
+        """Calculate park coordinates and slew there.
         
-            
+           Park in zenith position.
+           Therefore calculate RA as LST, DEC as latitude.
+        """
+        #Calculate LST
+        self.get_LST()
+        #Set coordinates
+        self.set_target_ra_from_string(self.LST)
+        self.set_target_dec_from_string('+49 23 32')
+        #Slew to target
+        self.slew_to_target()
+        
+        
         
 
         

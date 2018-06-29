@@ -90,10 +90,6 @@ class WaltzGUI(lx.Lx200Commands):
                                    height = 1,
                                    width = 2)
         self.north_button.grid(row=0,column=1)
-        self.north_button.bind("<ButtonPress-1>",
-                               self.start_move_north_buttonclick)
-        self.north_button.bind("<ButtonRelease-1>",
-                               self.stop_move_north_buttonclick)
         
         
         self.west_button = Button(self.control_frame,
@@ -103,10 +99,6 @@ class WaltzGUI(lx.Lx200Commands):
                                   height = 1,
                                   width = 2)
         self.west_button.grid(row=1,column=0)
-        self.west_button.bind("<ButtonPress-1>",
-                              self.start_move_west_buttonclick)
-        self.west_button.bind("<ButtonRelease-1>",
-                              self.stop_move_west_buttonclick)
         
         self.east_button = Button(self.control_frame,
                                   text="E",
@@ -115,10 +107,6 @@ class WaltzGUI(lx.Lx200Commands):
                                   height = 1,
                                   width = 2)
         self.east_button.grid(row=1,column=2)
-        self.east_button.bind("<ButtonPress-1>",
-                              self.start_move_east_buttonclick)
-        self.east_button.bind("<ButtonRelease-1>",
-                              self.stop_move_east_buttonclick)
         
         
         self.south_button = Button(self.control_frame,
@@ -128,10 +116,6 @@ class WaltzGUI(lx.Lx200Commands):
                                    height = 1, 
                                    width = 2)
         self.south_button.grid(row=2,column=1)
-        self.south_button.bind("<ButtonPress-1>",
-                               self.start_move_south_buttonclick)
-        self.south_button.bind("<ButtonRelease-1>",
-                               self.stop_move_south_buttonclick)
         
         self.stop_button = Button(self.control_frame,
                                   text="STOP",
@@ -172,18 +156,25 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.precision_button = Button(self.options_frame,
                                        text="Toggle \n Precision",
-                                       font=('arial', 15, 'bold'),
+                                       font=('arial', 12, 'bold'),
                                        bg='LightGrey',
                                        command=super().toggle_precision)
-        self.precision_button.grid(row=0,column=0,padx=10)
+        self.precision_button.grid(row=0,column=0,padx=5)
+        
+        self.park_button = Button(self.options_frame,
+                                  text="Park \n Telescope",
+                                  font=('arial', 12, 'bold'),
+                                  bg='LightGrey',
+                                  command=self.park_telescope_buttonclick)
+        self.park_button.grid(row=0, column=1, padx=5)
         
         self.sync_button = Button(self.options_frame,
                                        text="Synchronize \n with Target",
-                                       font=('arial', 15, 'bold'),
+                                       font=('arial', 12, 'bold'),
                                        bg='LightGrey',
                                        command=self.sync_yes_no,
                                        state='disabled')
-        self.sync_button.grid(row=0,column=1,padx=10)
+        self.sync_button.grid(row=0,column=2,padx=5)
         
         
         
@@ -202,16 +193,6 @@ class WaltzGUI(lx.Lx200Commands):
         self.HIP_entry= Entry(self.target_frame,
                               font=('arial', 15))
         self.HIP_entry.grid(row=0, column=1,pady=10)
-        self.HIP_entry.bind("<Return>",
-                            self.set_hip_target_from_entry, add="+")
-        self.HIP_entry.bind("<Return>",
-                            self.respond_to_target_limits, add="+")
-        #<FocusOut> triggers when keyboard focus is moved out of the widget (thus includes <Tab>) 
-        
-        self.HIP_entry.bind("<Tab>",
-                            self.set_hip_target_from_entry, add="+")
-        self.HIP_entry.bind("<Tab>",
-                            self.respond_to_target_limits, add="+")
         
         
         self.target_ra_label = Label(self.target_frame,
@@ -222,15 +203,7 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_ra_entry= Entry(self.target_frame,
                                     font=('arial', 15))
         self.target_ra_entry.grid(row=1, column=1,pady=10)
-        #Input should be valuated at Retur and Tab (use add="+" to add more than one bindings)
-        self.target_ra_entry.bind("<Return>",
-                                  self.set_target_ra_from_entry, add="+")
-        self.target_ra_entry.bind("<Return>",
-                                  self.respond_to_target_limits,add="+")
-        self.target_ra_entry.bind("<Tab>",
-                                  self.set_target_ra_from_entry,add="+")
-        self.target_ra_entry.bind("<Tab>",
-                                  self.respond_to_target_limits,add="+")
+
         
         self.target_dec_label = Label(self.target_frame,
                                       font=('arial', 15),
@@ -240,14 +213,6 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_dec_entry= Entry(self.target_frame,
                                      font=('arial', 15))
         self.target_dec_entry.grid(row=2, column=1,pady=10)
-        self.target_dec_entry.bind("<Return>",
-                                   self.set_target_dec_from_entry, add="+")
-        self.target_dec_entry.bind("<Return>",
-                                   self.respond_to_target_limits,add="+")
-        self.target_dec_entry.bind("<Tab>", 
-                                   self.set_target_dec_from_entry, add="+")
-        self.target_dec_entry.bind("<Tab>", 
-                                   self.respond_to_target_limits, add="+")
         
         self.slew_target_button = Button(self.target_frame,
                                          text="Slew to Target",
@@ -305,6 +270,7 @@ class WaltzGUI(lx.Lx200Commands):
     def _start_commands(self):
         """ Contains all functions to be executed at start of program.
         """
+        
         #Commands to be executed even without connection
         self.refresh_CET()
         self.refresh_LST()
@@ -324,6 +290,7 @@ class WaltzGUI(lx.Lx200Commands):
     def _respond_to_connection_state(self):
         """ Checks connection to serial port.
             Print Warning if not and closes program.
+            Enables and binds all buttons if connection is set.
         """
         #If connection to Waltz is closed
         if not self.connected:
@@ -508,6 +475,14 @@ class WaltzGUI(lx.Lx200Commands):
             #If previous slew is not finished the funcion will call itself every second.
             self.master.after(1000, self.continue_slew, initial_target_ra, initial_target_dec)
         
+    def park_telescope_buttonclick(self):
+        """Parks telescope and waits for slew to finish.
+        """
+        super().park_telescope()
+        self.wait_for_slew_finish(0)
+      
+        
+        
         
     def set_hip_target_from_entry(self, event):
         """ Gets a HIP number from the HIP_entry widget and calculates the coordinates.
@@ -551,9 +526,9 @@ class WaltzGUI(lx.Lx200Commands):
         result=messagebox.askyesno("Synchroniziation", 
                                      "Do you really want to synchronize coordinates with target coordinates?")
         if result:
-            self.sync_on_target_clickbutton()
+            self.sync_on_target_buttonclick()
         
-    def sync_on_target_clickbutton(self):
+    def sync_on_target_buttonclick(self):
         """Gets target coordinates from entries.
            Synchronizes coordinates with target coordinates.
            In Case of Hipparcos target it will recalculate target coordinates
@@ -583,11 +558,11 @@ class WaltzGUI(lx.Lx200Commands):
         """
         #Disable all buttons
         self.disable_all_buttons()
-        
         #Check if slew has finished and enable buttons if so.
         #Then break the loop
         if super().slew_finished():
             self.enable_all_buttons()
+            self.slew_target_button.config(state='disabled')
             self.slew_done=True
             return True
         #If slewing has not finshed yet, increase the counter
@@ -602,6 +577,7 @@ class WaltzGUI(lx.Lx200Commands):
             #If maximum number is reached: Enable all buttons again and exit the function
             #This is not very safe but the best solution so far.
             self.enable_all_buttons()
+            self.slew_target_button.config(state='disabled')         
             return False
     def disable_all_buttons(self):
         """ Disables all buttons and unbinds all bindings.
@@ -625,6 +601,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.precision_button.config(state='disabled')
         self.sync_button.config(state='disabled')
+        self.park_button.config(state='disabled')
         
         #Radiobuttons
         for child in self.radiobutton_frame.winfo_children():
@@ -632,7 +609,8 @@ class WaltzGUI(lx.Lx200Commands):
         
     def enable_all_buttons(self):
         """ Enables all buttons and binds all bindings.
-            Except of Stop Button
+            Except of Stop Button.
+            All bindings are defined here, except of commands of buttons.
         """
         #Disable all buttons 
         #We also need to bind the buttons which are called by events instead of commands
@@ -651,6 +629,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.precision_button.config(state='normal')
         self.sync_button.config(state='normal')
+        self.park_button.config(state='normal')
         
         #Enable and bind entry widgets in target_frame
         for child in self.target_frame.winfo_children():
