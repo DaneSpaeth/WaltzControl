@@ -1,7 +1,7 @@
-#import serial
+import serial
 import time
 
-import fakeSerial as serial
+#import fakeSerial as serial
 
 class CommunicationCommands(serial.Serial):
     """ Inherits from Serial class and adds basic communication functions """
