@@ -48,15 +48,15 @@ class WaltzGUI(lx.Lx200Commands):
                                  bg='light green')
         self.LST_display.grid(row=0, column=1,padx=10, pady=10)
         
-        self.CET_label= Label(output_frame,
+        self.local_time_label= Label(output_frame,
                               font=('arial', 15, 'bold'),
-                              text='CET')
-        self.CET_label.grid(row=0, column=3)
+                              text='LT')
+        self.local_time_label.grid(row=0, column=3)
         
-        self.CET_display = Label(output_frame,
+        self.local_time_display = Label(output_frame,
                                  font=('arial', 20, 'bold'),
                                  bg='light green')
-        self.CET_display.grid(row=0, column=4,padx=10,pady=10)
+        self.local_time_display.grid(row=0, column=4,padx=10,pady=10)
         
         self.RA_label= Label(output_frame,
                              font=('arial', 15, 'bold'),
@@ -173,7 +173,7 @@ class WaltzGUI(lx.Lx200Commands):
                                        font=('arial', 12, 'bold'),
                                        bg='LightGrey',
                                        command=self.sync_yes_no,
-                                       state='disabled')
+                                       state='normal')
         self.sync_button.grid(row=0,column=2,padx=5)
         
         
@@ -218,7 +218,7 @@ class WaltzGUI(lx.Lx200Commands):
                                          text="Slew to Target",
                                          font=('arial', 15),
                                          bg='LightGrey',
-                                         state='disabled',
+                                         state='normal',
                                          command=self.slew_to_target_buttonclick)
         self.slew_target_button.grid(row=3,columnspan=2)
         
@@ -272,7 +272,7 @@ class WaltzGUI(lx.Lx200Commands):
         """
         
         #Commands to be executed even without connection
-        self.refresh_CET()
+        self.refresh_local_time()
         self.refresh_LST()
         
         #If connection is not open close program
@@ -306,28 +306,26 @@ class WaltzGUI(lx.Lx200Commands):
         if self.connected:
             #Enable all buttons
             self.enable_all_buttons()
-            self.slew_target_button.config(state='disabled')
-            self.sync_button.config(state='disabled')
             #Start Commands
             self._start_commands()
             
             
         
-    def refresh_CET(self):
+    def refresh_local_time(self):
         """ Displays the current Central Eruopean Time on CET_display.
             Calls itself all 200ms to refresh time.
         """
         
         # get the current local time from the PC
-        CET_now = time.strftime('%H:%M:%S')
+        local_time_now = time.strftime('%H:%M:%S')
         # if time string has changed, update it
-        if CET_now != self.CET:
-            self.CET = CET_now
-            self.CET_display.config(text=self.CET)
+        if local_time_now != self.CET:
+            self.local_time = local_time_now
+            self.local_time_display.config(text=self.local_time)
         # calls itself every 200 milliseconds
         # to update the time display as needed
         # could use >200 ms, but display gets jerky
-        self.master.after(200, self.refresh_CET)
+        self.master.after(200, self.refresh_local_time)
         
     def refresh_LST(self):
         """ Displays the current Local Sidereal Time on LST_display.
@@ -348,71 +346,7 @@ class WaltzGUI(lx.Lx200Commands):
         self.get_coordinates()
         self.RA_display.config(text=self.ra)
         self.DEC_display.config(text=self.dec)
-        self.respond_to_limits()
         self.master.after(500,self.display_coordinates)
-        
-    def respond_to_limits(self):
-        """ Uses Lx200Commands.check_limits() to check if coordinates have reached limits.
-            Defines the response the program has to these limits.
-        """
-        super().check_limits()
-        #Check if coordinate limits are reached and change the color
-        if self.ra_soft_limit_reached:
-            self.RA_display.config(bg='yellow')
-        else:
-            #Since the hard limit includes the soft limit, we can only check_limits
-            #if the soft limit is False to reset to default color
-            self.RA_display.config(bg='light green')
-            
-        if self.ra_hard_limit_reached:
-            self.RA_display.config(bg='red')
-            
-        if self.dec_soft_limit_reached:
-            self.DEC_display.config(bg='yellow')
-        else:
-            #Since the hard limit includes the soft limit, we can only check_limits
-            #if the soft limit is False to reset to default color
-            self.DEC_display.config(bg='light green')
-            
-        if self.dec_hard_limit_reached:
-            self.DEC_display.config(bg='red')
-            
-    def respond_to_target_limits(self, event):
-        """ Uses Lx200Commands.check_limits() to check if target coordinates have reached limits.
-            Defines the response the program has to these limits.
-        """
-        super().check_limits()
-        #Check if target limits are reached and change colors/disable buttons
-        if self.target_ra_soft_limit_reached:
-            self.target_ra_entry.config(bg='yellow')
-        else:
-            #Since the hard limit includes the soft limit, we can only check_limits
-            #if the soft limit is False to reset to default color
-            self.target_ra_entry.config(bg='white')
-            
-            
-        if self.target_ra_hard_limit_reached:
-            self.target_ra_entry.config(bg='red')
-            self.slew_target_button.config(state='disabled')
-            self.sync_button.config(state='disabled')
-            
-        if self.target_dec_soft_limit_reached:
-            self.target_dec_entry.config(bg='yellow')
-        else:
-            #Since the hard limit includes the soft limit, we can only check_limits
-            #if the soft limit is False to reset to default color
-            self.target_dec_entry.config(bg='white')
-            
-        if self.target_dec_hard_limit_reached:
-            self.target_dec_entry.config(bg='red')
-            self.slew_target_button.config(state='disabled')
-            self.sync_button.config(state='disabled')
-        
-        #Enable slew button and sync button again if within limits
-        if not (self.target_dec_hard_limit_reached or
-                self.target_ra_hard_limit_reached):
-            self.slew_target_button.config(state='normal')
-            self.sync_button.config(state='normal')
             
             
         
@@ -449,31 +383,25 @@ class WaltzGUI(lx.Lx200Commands):
         """Slews to target.
            Target must be set before via set_target_dec_from_string and set_target_ra_from_string
         """
-        #Check if slew is dangerous and set medium position as new target if so.
-        #Store the initial target coordinates 
-        (initial_target_ra, initial_target_dec)=super().check_set_medium_position()
-        #Wait for the first slew to finish
-        self.wait_for_slew_finish(0)
-        #No call the actual slew to the target coordinates
-        self.continue_slew(initial_target_ra, initial_target_dec)
+        super().slew_to_target()
     
-    def continue_slew(self,initial_target_ra, initial_target_dec):
+    #def continue_slew(self,initial_target_ra, initial_target_dec):
         """ Continues slewing after possible initial slew to medium position.
             Performs slewing if no slew to medium position is necessary.
         """
         #Check if slew is finished. Default Value of slew_done=True,
         #so it will also be True if no slew to medium position was necessary.)
-        if self.slew_done:
+        #if self.slew_done:
             #Set the initial target coordinates as normal target coordinates again
-            super().set_target_ra_from_string(initial_target_ra)
-            super().set_target_dec_from_string(initial_target_dec)
+            #super().set_target_ra_from_string(initial_target_ra)
+            #super().set_target_dec_from_string(initial_target_dec)
             #Slew to target
-            super().slew_to_target()
+            #super().slew_to_target()
             #Wait for the slew to finish (disables all buttons etc.)
-            self.wait_for_slew_finish(0)
-        else:
+            #self.wait_for_slew_finish(0)
+        #else:
             #If previous slew is not finished the funcion will call itself every second.
-            self.master.after(1000, self.continue_slew, initial_target_ra, initial_target_dec)
+            #self.master.after(1000, self.continue_slew, initial_target_ra, initial_target_dec)
         
     def park_telescope_buttonclick(self):
         """Parks telescope and waits for slew to finish.
@@ -577,7 +505,8 @@ class WaltzGUI(lx.Lx200Commands):
             #If maximum number is reached: Enable all buttons again and exit the function
             #This is not very safe but the best solution so far.
             self.enable_all_buttons()
-            self.slew_target_button.config(state='disabled')         
+            self.slew_target_button.config(state='disabled')
+            self.slew_done=True
             return False
     def disable_all_buttons(self):
         """ Disables all buttons and unbinds all bindings.
@@ -638,30 +567,21 @@ class WaltzGUI(lx.Lx200Commands):
         #Add the bindings manually
         self.HIP_entry.bind("<Return>",
                             self.set_hip_target_from_entry, add="+")
-        self.HIP_entry.bind("<Return>",
-                            self.respond_to_target_limits, add="+")
         self.HIP_entry.bind("<Tab>",
                             self.set_hip_target_from_entry, add="+")
-        self.HIP_entry.bind("<Tab>",
-                            self.respond_to_target_limits,add="+")
+
         
         self.target_ra_entry.bind("<Return>",
-                                  self.set_target_ra_from_entry, add="+")
-        self.target_ra_entry.bind("<Return>",
-                                  self.respond_to_target_limits,add="+")
+                                  self.set_target_ra_from_entry, add="+") 
         self.target_ra_entry.bind("<Tab>",
                                   self.set_target_ra_from_entry,add="+")
-        self.target_ra_entry.bind("<Tab>",
-                                  self.respond_to_target_limits,add="+")
+        
         
         self.target_dec_entry.bind("<Return>",
                                    self.set_target_dec_from_entry, add="+")
-        self.target_dec_entry.bind("<Return>",
-                                   self.respond_to_target_limits,add="+")
         self.target_dec_entry.bind("<Tab>", 
                                    self.set_target_dec_from_entry, add="+")
-        self.target_dec_entry.bind("<Tab>", 
-                                   self.respond_to_target_limits, add="+")
+        
         
         #Radiobuttons
         for child in self.radiobutton_frame.winfo_children():

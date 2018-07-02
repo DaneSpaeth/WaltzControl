@@ -17,18 +17,6 @@ class Lx200Commands(com.CommunicationCommands):
         self.LST=''
         self.LST_float=0
         
-        #We introduce a soft limit (where to be cautious) and a hard limit (where to stop)
-        #in Declination
-        self.dec_up_soft_limit=49
-        self.dec_up_hard_limit=60
-        self.dec_low_soft_limit=0
-        self.dec_low_hard_limit=-15
-        #Define the limits in hour angle (offset from meridian)
-        self.ha_up_soft_limit=4
-        self.ha_up_hard_limit=5
-        self.ha_low_soft_limit=-4
-        self.ha_low_hard_limit=-5
-        
         #Store the current coordinates as strings
         self.ra=''
         self.dec=''
@@ -36,15 +24,6 @@ class Lx200Commands(com.CommunicationCommands):
         self.ra_float=0
         self.dec_float=0
         self.ha_float=0
-        #Limits the coordinates may reach
-        self.dec_soft_limit_reached=False
-        self.dec_hard_limit_reached=False
-        #For Right ascension
-        self.ra_soft_limit_reached=False
-        self.ra_up_soft_limit_reached=False
-        self.ra_low_soft_limit_reached=False
-        self.ra_hard_limit_reached=False
-        
         
         #Store the Target coordinates as strings
         self.target_ra=False
@@ -53,14 +32,6 @@ class Lx200Commands(com.CommunicationCommands):
         self.target_ra_float=False
         self.target_dec_float=False
         self.target_ha_float=False
-        #Limits the target coordinates may reach
-        self.target_dec_soft_limit_reached=False
-        self.target_dec_hard_limit_reached=False
-        #For Right ascension
-        self.target_ra_soft_limit_reached=False
-        self.target_ra_up_soft_limit_reached=False
-        self.targer_ra_low_soft_limit_reached=False
-        self.target_ra_hard_limit_reached=False
         
         #Store if slewing is finished
         self.slew_done=True
@@ -317,12 +288,14 @@ class Lx200Commands(com.CommunicationCommands):
             self.target_ra=False
             return 0
         #Check if the input is observable and write input to serial port if yes
-        self.check_limits()
-        if not self.target_ra_hard_limit_reached:
-            inp=inp.encode()
-            self.write(inp)
-        else:
-            print('Target RA currently not observable')
+        #self.check_limits()
+        #if not self.target_ra_hard_limit_reached:
+        #    inp=inp.encode()
+        #    self.write(inp)
+        #else:
+        #    print('Target RA currently not observable')
+        inp=inp.encode()
+        self.write(inp)
         #Receive 1 if input is valid and 0 if not
         #Convert to boolean
         #valid_input=self.get_response()
@@ -414,12 +387,14 @@ class Lx200Commands(com.CommunicationCommands):
             print('Invalid Input! Use Format "[+/-]dd mm ss" OR "[+/-]dd mm"')
             return 0
         #Check if the input is observable and write input to serial port if yes
-        self.check_limits()
-        if not self.target_dec_hard_limit_reached:
-            inp=inp.encode()
-            self.write(inp)
-        else:
-            print('Target DEC not observable')
+        #self.check_limits()
+        #if not self.target_dec_hard_limit_reached:
+        #    inp=inp.encode()
+        #    self.write(inp)
+        #else:
+        #    print('Target DEC not observable')
+        inp=inp.encode()
+        self.write(inp)
         #Receive '1' if input is valid and '0' if not
         #Convert to boolean
         #valid_input=self.get_response()
@@ -455,7 +430,7 @@ class Lx200Commands(com.CommunicationCommands):
             #else:
                 #print('Error: Slewing not possible!')
             print("Response from serial port:",out)
-            self.slew_done=False
+            self.slew_done=True
         else:
             return 0
     
@@ -592,109 +567,6 @@ class Lx200Commands(com.CommunicationCommands):
             
         #For different purposes also compute LST as a float in hours.
         self.LST_float=int(hours)+int(minutes)/60.+int(seconds)/3600.
-    def check_limits(self):
-        """ Ckecks if ra or dec crossed the soft or hard limits.
-            Sets self.dec_soft_limit_reached=True
-                 self.dec_hard_limit_reached=True
-                 self.ra_soft_limit_reached=True
-                 self.ra_hard_limit_reached=True
-            in the corresponding case.
-            
-            Also checks if the target coordinates cross the limits.
-            Sets self.target_dec_soft_limit_reached=True
-                 self.target_dec_hard_limit_reached=True
-                 self.target_ra_soft_limit_reached=True
-                 self.target_ra_hard_limit_reached=True
-            in the corresponding case.
-        """
-        
-        #Compute the current hour angle
-        #First compute the LST
-        self.get_LST()
-        
-        #Compute the hour angle in range [-12,12]
-        self.ha_float=(self.LST_float-self.ra_float)%24
-        if self.ha_float>12.:
-            self.ha_float=self.ha_float-24.
-            
-        #Compute the hour angle of the target in range [-12,12]
-        self.target_ha_float=(self.LST_float-self.target_ra_float)%24
-        if self.target_ha_float>12.:
-            self.target_ha_float=self.target_ha_float-24.
-            
-        #Set the limits all to false. Important if you move into the allowed area again.
-        self.ra_soft_limit_reached=False
-        self.ra_up_soft_limit_reached=False
-        self.ra_low_soft_limit_reached=False
-        self.ra_hard_limit_reached=False
-        self.dec_soft_limit_reached=False
-        self.dec_hard_limit_reached=False
-        
-        self.target_ra_soft_limit_reached=False
-        self.target_ra_up_soft_limit_reached=False
-        self.target_ra_low_soft_limit_reached=False
-        self.target_ra_hard_limit_reached=False
-        self.target_dec_soft_limit_reached=False
-        self.target_dec_hard_limit_reached=False
-        
-            
-        #Now check the limits
-        #RA soft limit
-        #We introduce separate boolean for up and low limit to introduce intermediate steps for dangerous slewing
-        if self.ha_float<=self.ha_low_soft_limit:
-            self.ra_low_soft_limit_reached=True
-            self.ra_soft_limit_reached=True
-            
-        if self.ha_float>=self.ha_up_soft_limit:
-            self.ra_up_soft_limit_reached=True
-            self.ra_soft_limit_reached=True
-            
-        #RA hard limit
-        if (self.ha_float<=self.ha_low_hard_limit or
-            self.ha_float>=self.ha_up_hard_limit):
-            self.ra_hard_limit_reached=True
-            
-        #DEC soft limit
-        if (self.dec_float<=self.dec_low_soft_limit or
-            self.dec_float>=self.dec_up_soft_limit):
-            self.dec_soft_limit_reached=True
-            
-        #DEC hard limit
-        if (self.dec_float<=self.dec_low_hard_limit or
-            self.dec_float>=self.dec_up_hard_limit):
-            self.dec_hard_limit_reached=True
-            
-        #Target RA soft limit
-        if self.target_ha_float<=self.ha_low_soft_limit:
-            self.target_ra_low_soft_limit_reached=True
-            self.target_ra_soft_limit_reached=True
-        
-        if self.target_ha_float>=self.ha_up_soft_limit:
-            self.target_ra_up_soft_limit_reached=True
-            self.target_ra_soft_limit_reached=True
-
-            
-        #Target RA hard limit
-        if (self.target_ha_float<=self.ha_low_hard_limit or
-            self.target_ha_float>=self.ha_up_hard_limit):
-            self.target_ra_hard_limit_reached=True
-            
-        #Target DEC soft limit
-        if (self.target_dec_float<=self.dec_low_soft_limit or
-            self.target_dec_float>=self.dec_up_soft_limit):
-            self.target_dec_soft_limit_reached=True
-            
-        #Target DEC hard limit
-        if (self.target_dec_float<=self.dec_low_hard_limit or
-            self.target_dec_float>=self.dec_up_hard_limit):
-            self.target_dec_hard_limit_reached=True
-            
-        #If no targets set also raise hard limits
-        if not self.target_ra:
-            self.target_ra_hard_limit_reached=True
-            
-        if not self.target_dec:
-            self.target_dec_hard_limit_reached=True
             
     def slew_to_medium_position(self):
         """Defines a medium position, where it is always safe to slew to
@@ -710,7 +582,7 @@ class Lx200Commands(com.CommunicationCommands):
         self.set_target_dec_from_string(medium_dec)
         self.slew_to_target()
             
-    def check_set_medium_position(self):
+    #def check_set_medium_position(self):
         
         """ Checks for dangerous slewing commands,
             in which the telescope could slew through the hard limited area.
@@ -718,16 +590,16 @@ class Lx200Commands(com.CommunicationCommands):
             Sets and slews to a intermediate step in medium position in this case.
             Afterwards sets 
         """
-        initial_target_ra=self.target_ra
-        initial_target_dec=self.target_dec
-        self.check_limits()
+        #initial_target_ra=self.target_ra
+        #initial_target_dec=self.target_dec
+        #self.check_limits()
         #Current coordinates in up soft limit and target coordinates in low soft limit
-        if self.ra_up_soft_limit_reached and self.target_ra_low_soft_limit_reached:
-            self.slew_to_medium_position()
+        #if self.ra_up_soft_limit_reached and self.target_ra_low_soft_limit_reached:
+            #self.slew_to_medium_position()
         #Current coordinates in low soft limit and target coordinates in up soft limit
-        elif self.ra_low_soft_limit_reached and self.target_ra_up_soft_limit_reached:
-            self.slew_to_medium_position()       
-        return(initial_target_ra, initial_target_dec)
+        #elif self.ra_low_soft_limit_reached and self.target_ra_up_soft_limit_reached:
+            #self.slew_to_medium_position()       
+        #return(initial_target_ra, initial_target_dec)
             
     
     def slew_finished(self):
