@@ -1,5 +1,6 @@
 from tkinter import Tk, Menu, Label, LabelFrame, Button, Radiobutton, Entry, messagebox, StringVar,  Frame, END, W, E
 import time
+import datetime
 
 import lx200commands as lx
 
@@ -17,8 +18,9 @@ class WaltzGUI(lx.Lx200Commands):
         self.master = master
         master.title("Waltz Control Panel")
        
-        #Store CET and LST
+        #Store CET and UCT
         self.CET = ''
+        self.UTC = ''
         
         ## Building up GUI Widgets ##
         
@@ -57,6 +59,18 @@ class WaltzGUI(lx.Lx200Commands):
                                  font=('arial', 20, 'bold'),
                                  bg='light green')
         self.local_time_display.grid(row=0, column=4,padx=10,pady=10)
+        
+        self.UTC_label= Label(output_frame,
+                              font=('arial', 15, 'bold'),
+                              text='UTC')
+        self.UTC_label.grid(row=0, column=5)
+        
+        self.UTC_display = Label(output_frame,
+                                 font=('arial', 20, 'bold'),
+                                 bg='light green')
+        self.UTC_display.grid(row=0, column=6,padx=10,pady=10)
+        
+        
         
         self.RA_label= Label(output_frame,
                              font=('arial', 15, 'bold'),
@@ -272,8 +286,7 @@ class WaltzGUI(lx.Lx200Commands):
         """
         
         #Commands to be executed even without connection
-        self.refresh_local_time()
-        self.refresh_LST()
+        self.refresh_times()
         
         #If connection is not open close program
         if not self.connected:
@@ -308,9 +321,20 @@ class WaltzGUI(lx.Lx200Commands):
             self.enable_all_buttons()
             #Start Commands
             self._start_commands()
-            
-            
+                    
+    def refresh_times(self):
+        """ Refreshs all times (LST, LT, UTC)
         
+            Introduced to have only one function call in the background.
+            Better to syn clocks
+        """
+        #Refresh individual times
+        self.refresh_LST()
+        self.refresh_local_time()
+        self.refresh_UTC()
+        #Calls itself all 200 ms
+        self.master.after(200, self.refresh_times)
+    
     def refresh_local_time(self):
         """ Displays the current Central Eruopean Time on CET_display.
             Calls itself all 200ms to refresh time.
@@ -322,19 +346,27 @@ class WaltzGUI(lx.Lx200Commands):
         if local_time_now != self.CET:
             self.local_time = local_time_now
             self.local_time_display.config(text=self.local_time)
-        # calls itself every 200 milliseconds
-        # to update the time display as needed
-        # could use >200 ms, but display gets jerky
-        self.master.after(200, self.refresh_local_time)
-        
+    
     def refresh_LST(self):
         """ Displays the current Local Sidereal Time on LST_display.
             Calls itself all 200ms to refresh time.
         """
         super().get_LST()
         self.LST_display.config(text=self.LST)
-        #Calls itself after 200 ms
-        self.master.after(200, self.refresh_LST)
+        
+    def refresh_UTC(self):
+        """ Displays the current Coordinated Universal Time on UTC_display.
+            Calls itself all 200 ms to refresh time.
+        """
+        #Get current UTC from datetime
+        UTC_now= datetime.datetime.utcnow()
+        UTC_now=UTC_now.strftime("%H:%M:%S")
+        #Check if UTC has changed since last call
+        if UTC_now != self.UTC:
+            #Save current UTC in self.UTC
+            self.UTC = UTC_now
+            #Display UTC
+            self.UTC_display.config(text=self.UTC)
     
     def display_coordinates(self):
         """ Displays Right ascension and Declination.
@@ -347,10 +379,7 @@ class WaltzGUI(lx.Lx200Commands):
         self.RA_display.config(text=self.ra)
         self.DEC_display.config(text=self.dec)
         self.master.after(500,self.display_coordinates)
-            
-            
-        
-                                       
+                                               
     def start_move_west_buttonclick(self, event):
         """ Sends move west LX200 command to serial connection
         """
