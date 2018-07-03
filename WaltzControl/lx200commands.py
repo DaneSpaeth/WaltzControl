@@ -20,6 +20,7 @@ class Lx200Commands(com.CommunicationCommands):
         #Store the current coordinates as strings
         self.ra=''
         self.dec=''
+        self.ha=''
         #Store the current coordinates as floats (not always updated at the moment)
         self.ra_float=0
         self.dec_float=0
@@ -105,6 +106,22 @@ class Lx200Commands(com.CommunicationCommands):
         else:
             self.dec=unformated_dec
             self.dec_float=0
+            
+    def calculate_hour_angle(self):
+        """ Takes self.ra and self.LST and calculates hour angle
+        """
+        #Hour Angle
+        #Compute the hour angle in range [-12,12]
+        self.ha_float=(self.LST_float-self.ra_float)%24
+        if self.ha_float>12.:
+            self.ha_float=self.ha_float-24.
+        #Format hour angle to hh:mm:ss
+        ha_float_seconds=round(self.ha_float*3600)
+        (minutes,seconds)=divmod(ha_float_seconds,60)
+        (hours,minutes)=divmod(minutes,60)
+        
+        self.ha='{:+03}:{:02}:{:02}'.format(hours,minutes,seconds)
+        
         
     def start_move_west(self):
         """ Sends move west LX200 command to serial connection

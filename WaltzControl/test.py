@@ -1,12 +1,8 @@
-unformated_ra='12:34:56#'
-if len(unformated_ra)==9:
-    #Formating string output Right Ascension
-    ra='{}h{}m{}s'.format(unformated_ra[0:2],
-                         unformated_ra[3:5],
-                         unformated_ra[6:8])
-print(ra)
+ha_float=-11.1234
 
-seconds=00.2456
-seconds=round(float(seconds))
-seconds='{:02}'.format(seconds)
-print(seconds)
+ha_float_seconds=round(ha_float*3600)
+(minutes,seconds)=divmod(ha_float_seconds,60)
+(hours,minutes)=divmod(minutes,60)
+ha='{:+02}:{:02}:{:02}'.format(hours,minutes,seconds)
+
+print(ha)

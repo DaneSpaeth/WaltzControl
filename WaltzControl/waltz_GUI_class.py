@@ -92,6 +92,16 @@ class WaltzGUI(lx.Lx200Commands):
                                 bg='light green')
         self.DEC_display.grid(row=1, column =4)
         
+        self.HA_label= Label(output_frame,
+                              font=('arial', 15, 'bold'),
+                              text= "HA")
+        self.HA_label.grid(row=1, column =5)
+        
+        self.HA_display= Label(output_frame,
+                                    font=('arial', 20, 'bold'),
+                                    bg='light green')
+        self.HA_display.grid(row=1, column=6)
+        
         #Control frame
         self.control_frame=Frame(master)
         self.control_frame.grid(row=1,column=0,pady=10)
@@ -332,6 +342,10 @@ class WaltzGUI(lx.Lx200Commands):
         self.refresh_LST()
         self.refresh_local_time()
         self.refresh_UTC()
+        
+        #Also refresh hour_angle synced to times because it will change in the same pace
+        super().calculate_hour_angle()
+        self.HA_display.config(text=self.ha)
         #Calls itself all 200 ms
         self.master.after(200, self.refresh_times)
     
@@ -370,7 +384,12 @@ class WaltzGUI(lx.Lx200Commands):
     
     def display_coordinates(self):
         """ Displays Right ascension and Declination.
+            
+            Hour angle will be displayed synced to times.
+            It should change at the same rate as LST.
+            Look at refresh_times()
         """
+        
         #If connection is not open close program
         if not self.connected:
             return 0
