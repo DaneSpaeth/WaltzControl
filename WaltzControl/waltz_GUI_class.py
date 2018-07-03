@@ -1,4 +1,4 @@
-from tkinter import Tk, Menu, Label, LabelFrame, Button, Radiobutton, Entry, messagebox, StringVar,  Frame, END, W, E
+from tkinter import Tk, Menu, Label, LabelFrame, Button, Checkbutton, Radiobutton, Entry, messagebox, IntVar, StringVar,  Frame, END, W, E
 import time
 import datetime
 
@@ -38,7 +38,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         #Output frame
         output_frame=Frame(master)
-        output_frame.grid(row=0,columnspan=2)
+        output_frame.grid(row=0,columnspan=3)
 
         self.LST_label = Label(output_frame,
                                font=('arial', 15, 'bold'),
@@ -102,19 +102,42 @@ class WaltzGUI(lx.Lx200Commands):
                                     bg='light green')
         self.HA_display.grid(row=1, column=6)
         
+        #Interchange_frame
+        #To interchange W<->E buttons and N<->S
+        self.interchange_frame=Frame(master)
+        self.interchange_frame.grid(row=1, column=0,pady=10)
+        #Define Variables
+        self.inter_WE=IntVar()
+        self.inter_NS=IntVar()
+        self.inter_NS_checkbox=Checkbutton(self.interchange_frame,
+                                           text='N <> S',
+                                           font=('arial', 10, 'bold'),
+                                           variable=self.inter_NS,
+                                           command=self.interchange_north_south)
+        self.inter_NS_checkbox.grid(row=0,column=0,sticky='w',pady=5)
+        
+        
+        self.inter_WE_checkbox=Checkbutton(self.interchange_frame,
+                                           text='W <> E',
+                                           font=('arial', 10, 'bold'), 
+                                           variable=self.inter_WE,
+                                           command=self.interchange_west_east)
+        self.inter_WE_checkbox.grid(row=1,column=0,sticky='w',pady=5)
+        
+        
+        
         #Control frame
         self.control_frame=Frame(master)
-        self.control_frame.grid(row=1,column=0,pady=10)
+        self.control_frame.grid(row=1,column=1,pady=10)
 
 
-        self.north_button = Button(self.control_frame,
-                                   text="N",
+        self.south_button = Button(self.control_frame,
+                                   text="S",
                                    font=('arial', 20, 'bold'),
                                    bg='LightGrey',
-                                   height = 1,
+                                   height = 1, 
                                    width = 2)
-        self.north_button.grid(row=0,column=1)
-        
+        self.south_button.grid(row=0,column=1)
         
         self.west_button = Button(self.control_frame,
                                   text="W",
@@ -133,13 +156,13 @@ class WaltzGUI(lx.Lx200Commands):
         self.east_button.grid(row=1,column=2)
         
         
-        self.south_button = Button(self.control_frame,
-                                   text="S",
+        self.north_button = Button(self.control_frame,
+                                   text="N",
                                    font=('arial', 20, 'bold'),
                                    bg='LightGrey',
-                                   height = 1, 
+                                   height = 1,
                                    width = 2)
-        self.south_button.grid(row=2,column=1)
+        self.north_button.grid(row=2,column=1)
         
         self.stop_button = Button(self.control_frame,
                                   text="STOP",
@@ -153,7 +176,7 @@ class WaltzGUI(lx.Lx200Commands):
 
         #Radiobutton frame
         self.radiobutton_frame=Frame(master)
-        self.radiobutton_frame.grid(row=1,column=1,pady=10)
+        self.radiobutton_frame.grid(row=1,column=2,pady=10)
         
         
         radiobutton_parameters=[('Slew',0,self.set_speed_max),
@@ -398,7 +421,33 @@ class WaltzGUI(lx.Lx200Commands):
         self.RA_display.config(text=self.ra)
         self.DEC_display.config(text=self.dec)
         self.master.after(500,self.display_coordinates)
-                                               
+        
+    def interchange_west_east(self):
+        """Interchanges West and East Buttons.
+        """
+        #self.inter_WE.get() will return 1 if box is checked and 0 if not
+        if self.inter_WE.get():
+            #Grid Positions if checkbutton is checked
+            self.west_button.grid(row=1,column=2)
+            self.east_button.grid(row=1,column=0)  
+        if not self.inter_WE.get():
+            #Grid Position in default state
+            self.west_button.grid(row=1,column=0)
+            self.east_button.grid(row=1,column=2)
+            
+    def interchange_north_south(self):
+        """Interchanges North and South Buttons.
+        """
+        #self.inter_WE.get() will return 1 if box is checked and 0 if not
+        if self.inter_NS.get():
+            #Grid Positions if checkbutton is checked
+            self.south_button.grid(row=2,column=1)
+            self.north_button.grid(row=0,column=1)  
+        if not self.inter_NS.get():
+            #Grid Position in default state
+            self.south_button.grid(row=0,column=1)
+            self.north_button.grid(row=2,column=1)
+            
     def start_move_west_buttonclick(self, event):
         """ Sends move west LX200 command to serial connection
         """
@@ -538,7 +587,6 @@ class WaltzGUI(lx.Lx200Commands):
         #Then break the loop
         if super().slew_finished():
             self.enable_all_buttons()
-            self.slew_target_button.config(state='disabled')
             self.slew_done=True
             return True
         #If slewing has not finshed yet, increase the counter

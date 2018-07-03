@@ -110,7 +110,11 @@ class Lx200Commands(com.CommunicationCommands):
     def calculate_hour_angle(self):
         """ Takes self.ra and self.LST and calculates hour angle
         """
-        #Hour Angle
+        #Caution: It does not recalculate LST. So if you use it outisde GUI it could lead to wrong results.
+        #Make sure LST is refreshed.
+        #If No Connection and therofre self.ra_float=0, close program
+        if self.ra_float==0:
+            return 0
         #Compute the hour angle in range [-12,12]
         self.ha_float=(self.LST_float-self.ra_float)%24
         if self.ha_float>12.:
@@ -120,7 +124,7 @@ class Lx200Commands(com.CommunicationCommands):
         (minutes,seconds)=divmod(ha_float_seconds,60)
         (hours,minutes)=divmod(minutes,60)
         
-        self.ha='{:+03}:{:02}:{:02}'.format(hours,minutes,seconds)
+        self.ha='{:+03}h{:02}h{:02}s'.format(hours,minutes,seconds)
         
         
     def start_move_west(self):
