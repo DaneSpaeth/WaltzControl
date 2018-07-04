@@ -1,6 +1,8 @@
 from tkinter import Tk, Menu, Label, LabelFrame, Button, Checkbutton, Radiobutton, Entry, messagebox, IntVar, StringVar,  Frame, END, W, E
 import time
 import datetime
+import locale
+import pathlib
 
 import lx200commands as lx
 
@@ -32,6 +34,11 @@ class WaltzGUI(lx.Lx200Commands):
         connectionmenu.add_command(label="Open Connection", command=self.open_connection_buttonclick)
         connectionmenu.add_command(label="Close Connection", command=self.close_connection_buttonclick)
         menubar.add_cascade(label="Connection", menu=connectionmenu)
+        
+        #Pointing_stars_menu
+        pointing_stars_menu=Menu(menubar, tearoff=0)
+        pointing_stars_menu.add_command(label="Save as Pointing Star", command=self.save_pointing_star)
+        menubar.add_cascade(label="Pointing Star", menu= pointing_stars_menu)
         
         #Show menubar
         self.master.config(menu=menubar)
@@ -514,7 +521,6 @@ class WaltzGUI(lx.Lx200Commands):
             Sets these coordinates as target_ra and target_dec 
             and displays them in the corresponding entry widgets.
         """
-        
         hip_nr=self.HIP_entry.get()
         super().set_hip_target(hip_nr)
         self.target_ra_entry.delete(0, END)
@@ -682,7 +688,66 @@ class WaltzGUI(lx.Lx200Commands):
         #Radiobuttons
         for child in self.radiobutton_frame.winfo_children():
             child.config(state='normal')
+    
+    def save_pointing_star(self):
+        """ Saves Pointings Stars Information to file.
             
-         
+            Takes Hipparcos Number, RA, DEC LST and Date and saves to file.
             
+            Also Saves Hipparcos Number, RA, DEC, 
+            target_ra, target_dec, LST, UTC and Date to second file.
+            This could lead to potentially new system of pointing_star data.
+            This could be easier to handle.
+            Not done yet.
+        """
+        ### Traditional File ###
+        try:
+            hipparcos=self.HIP_entry.get()
+            #Need integer to catch errors and for formatting
+            hipparcos=int(hipparcos)
+            #Format Hipparcos Number to 000123
+            hip_pointing="{:06d}".format(hipparcos)
+        except ValueError:
+            print('Invalid Hiparcos number')
+            return 0
+        
+        #Format RA to hh mm ss
+        (RA_hours,h,rest)=self.ra.partition('h')
+        (RA_min,m,rest)=rest.partition('m')
+        (RA_sec,s,rest)=rest.partition('s')
+        RA_pointing="{} {} {}".format(RA_hours, RA_min, RA_sec)
+        
+        #Format DEC to +dd mm ss
+        (DEC_deg,grad,rest)=self.dec.partition('°')
+        (DEC_min,m,rest)=rest.partition("'")
+        (DEC_sec,s,rest)=rest.partition('"')
+        DEC_pointing="{} {} {}".format(DEC_deg, DEC_min, DEC_sec)
+        
+        #Format LST to hh mm ss
+        (LST_hours,h,rest)=self.LST.partition(':')
+        (LST_min,m,rest)=rest.partition(':')
+        (LST_sec,s,rest)=rest.partition(':')
+        LST_pointing="{} {} {}".format(LST_hours, LST_min, LST_sec)
+        
+        #Get Date in Format dd.mm.yyyy (using locale module)
+        today = datetime.date.today()
+        Date_pointing=today.strftime('%d.%m.%Y')
+        
+        line="{}    {}    {}    {}    {}\n".format(hip_pointing,
+                                                 RA_pointing,
+                                                 DEC_pointing,
+                                                 LST_pointing,
+                                                 Date_pointing)
+        #Filename and path using pathlib module
+        #File is in parrent_directory/pointing_stars/pointings_stars.txt
+        current_path=pathlib.Path.cwd()
+        parrent_path=current_path.parent
+        file_path=parrent_path / 'pointing_stars' / 'pointing_stars.txt'
+        #With automatically closes the file in the end
+        with open(file_path, 'a') as ps_file:
+            print('Saving pointing star to file')
+            ps_file.write(line)
+            
+        ### New Format File ###
+        
             

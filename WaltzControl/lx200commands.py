@@ -1,6 +1,7 @@
 import time
 import re
 import threading
+import pathlib
 
 
 from astropy.time import Time
@@ -474,8 +475,6 @@ class Lx200Commands(com.CommunicationCommands):
             self.target_ra=False
             self.target_dec=False
             return 0
-            
-        
         try:
             #We use the refraction uncorrected coordinates at the moment (We don't trust the correction too much)
             hip_coordinates=hip_position(hip_nr)

@@ -19,7 +19,7 @@ def hip_position(hip_nr,temperature=15, pressure=1005):
     ts=load.timescale()
     t=ts.now()
     #t=t.utc #Convert
-    
+
     #Load star catalogue coordinates from hipparcos.py module
     star=hipparcos.get(hip_nr)
     
@@ -37,5 +37,6 @@ def hip_position(hip_nr,temperature=15, pressure=1005):
     
     #RA,DEC,Dist of refraction uncorrected positions
     ra_calc_without_refraction,dec_calc_without_refraction,distance =apparent.radec(epoch='date')
+
     
     return [ra_calc,dec_calc,ra_calc_without_refraction,dec_calc_without_refraction]

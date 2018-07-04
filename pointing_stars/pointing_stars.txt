@@ -1,0 +1,1 @@
+HIP       RA          DEC          LST         Date
