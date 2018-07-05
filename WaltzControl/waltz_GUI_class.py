@@ -694,7 +694,7 @@ class WaltzGUI(lx.Lx200Commands):
             
             Takes Hipparcos Number, RA, DEC LST and Date and saves to file.
             
-            Also Saves Hipparcos Number, RA, DEC, 
+            Also Saves Hipparcos Number, RA, DEC, HA, 
             target_ra, target_dec, LST, UTC and Date to second file.
             This could lead to potentially new system of pointing_star data.
             This could be easier to handle.
@@ -745,9 +745,29 @@ class WaltzGUI(lx.Lx200Commands):
         file_path=parrent_path / 'pointing_stars' / 'pointing_stars.txt'
         #With automatically closes the file in the end
         with open(file_path, 'a') as ps_file:
-            print('Saving pointing star to file')
+            print('Saving pointing star to (old format) file')
             ps_file.write(line)
             
+            
         ### New Format File ###
+        line="{}    {}    {}    {}    {}    {}    {}    {}    {}\n"
+        line=line.format(hip_pointing,
+                         self.ra,
+                         self.dec,
+                         self.ha,
+                         self.target_ra,
+                         self.target_dec,
+                         self.LST,
+                         self.UTC,
+                         Date_pointing)
         
+        #Filename and path using pathlib module
+        #File is in parrent_directory/pointing_stars/pointings_stars_new_format.txt
+        current_path=pathlib.Path.cwd()
+        parrent_path=current_path.parent
+        file_path=parrent_path / 'pointing_stars' / 'pointing_stars_new_format.txt'
+        #With automatically closes the file in the end
+        with open(file_path, 'a') as ps_file:
+            print('Saving pointing star to (new format) file')
+            ps_file.write(line)
             
