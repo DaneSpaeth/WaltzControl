@@ -24,6 +24,9 @@ class WaltzGUI(lx.Lx200Commands):
         self.CET = ''
         self.UTC = ''
         
+        #Store if telescope is waiting for slew to finish
+        self.waiting=True
+        
         ## Building up GUI Widgets ##
         
         #Menubars
@@ -35,10 +38,23 @@ class WaltzGUI(lx.Lx200Commands):
         connectionmenu.add_command(label="Close Connection", command=self.close_connection_buttonclick)
         menubar.add_cascade(label="Connection", menu=connectionmenu)
         
+        #settings_menu
+        settings_menu=Menu(menubar, tearoff=0)
+        settings_menu.add_command(label="Enable buttons",command=self.stop_waiting)
+        menubar.add_cascade(label="Settings",menu=settings_menu)
+        
         #Pointing_stars_menu
         pointing_stars_menu=Menu(menubar, tearoff=0)
         pointing_stars_menu.add_command(label="Save as Pointing Star", command=self.save_pointing_star)
         menubar.add_cascade(label="Pointing Star", menu= pointing_stars_menu)
+        
+        #Special_positions_menu
+        special_positions_menu=Menu(menubar, tearoff=0)
+        special_positions_menu.add_command(label="Slew to Primary Mirror Position",command=self.primary_mirror_pos_buttonclick)
+        special_positions_menu.add_command(label="Slew to Secondary Mirror Position",command=self.secondary_mirror_pos_buttonclick)
+        special_positions_menu.add_command(label="Slew to Park Position",command=self.park_telescope_buttonclick)
+        menubar.add_cascade(label="Special Positions",menu=special_positions_menu)
+        
         
         #Show menubar
         self.master.config(menu=menubar)
@@ -215,20 +231,13 @@ class WaltzGUI(lx.Lx200Commands):
                                        command=super().toggle_precision)
         self.precision_button.grid(row=0,column=0,padx=5)
         
-        self.park_button = Button(self.options_frame,
-                                  text="Park \n Telescope",
-                                  font=('arial', 12, 'bold'),
-                                  bg='LightGrey',
-                                  command=self.park_telescope_buttonclick)
-        self.park_button.grid(row=0, column=1, padx=5)
-        
         self.sync_button = Button(self.options_frame,
                                        text="Synchronize \n with Target",
                                        font=('arial', 12, 'bold'),
                                        bg='LightGrey',
                                        command=self.sync_yes_no,
                                        state='normal')
-        self.sync_button.grid(row=0,column=2,padx=5)
+        self.sync_button.grid(row=0,column=1,padx=5)
         
         
         
@@ -488,6 +497,7 @@ class WaltzGUI(lx.Lx200Commands):
            Target must be set before via set_target_dec_from_string and set_target_ra_from_string
         """
         super().slew_to_target()
+        self.wait_for_slew_finish()
     
     #def continue_slew(self,initial_target_ra, initial_target_dec):
         """ Continues slewing after possible initial slew to medium position.
@@ -502,7 +512,7 @@ class WaltzGUI(lx.Lx200Commands):
             #Slew to target
             #super().slew_to_target()
             #Wait for the slew to finish (disables all buttons etc.)
-            #self.wait_for_slew_finish(0)
+            #self.wait_for_slew_finish()
         #else:
             #If previous slew is not finished the funcion will call itself every second.
             #self.master.after(1000, self.continue_slew, initial_target_ra, initial_target_dec)
@@ -510,12 +520,35 @@ class WaltzGUI(lx.Lx200Commands):
     def park_telescope_buttonclick(self):
         """Parks telescope and waits for slew to finish.
         """
+        #We need to call park telescope twice 
+        #because the tracking will change RA while DEC is still adjusting
+        #Park telescope for the first time
         super().park_telescope()
-        self.wait_for_slew_finish(0)
+        self.wait_for_slew_finish()
+        #Park telescope for the second time
+        super().park_telescope()
+        self.wait_for_slew_finish()
+        message=("Turn off the telescope controller to stop tracking"+
+                 " and remain in park position!")
+        messagebox.showinfo("Information",message=message,parent=self.master)
+        
+    def primary_mirror_pos_buttonclick(self):
+        """Slew Telescope to Primary Mirror Cover Position.
+        
+           Uses LX200Commands primary_mirror_pos.
+        """
+        super().primary_mirror_pos()
+        self.wait_for_slew_finish()
+        
+    def secondary_mirror_pos_buttonclick(self):
+        """Slew Telescope to Secondary Mirror Cover Position.
+        
+           Uses LX200Commands secondary_mirror_pos.
+        """
+        super().secondary_mirror_pos()
+        self.wait_for_slew_finish()
       
-        
-        
-        
+      
     def set_hip_target_from_entry(self, event):
         """ Gets a HIP number from the HIP_entry widget and calculates the coordinates.
             Sets these coordinates as target_ra and target_dec 
@@ -527,8 +560,7 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_ra_entry.insert(0, self.target_ra)
         self.target_dec_entry.delete(0, END)
         self.target_dec_entry.insert(0, self.target_dec)
-        
-        
+           
     def set_target_ra_from_entry(self, event):
         """ Gets a ra input from the target_ra_entry widget and sets it as target_ra.
             Accepted formats include hh mm ss and hh mm.t.
@@ -578,38 +610,45 @@ class WaltzGUI(lx.Lx200Commands):
         if hip_nr=='' and self.target_ra and self.target_dec:
             super().sync_on_coordinates()
             
-    def wait_for_slew_finish(self, counter, call_limit=30):
+    def wait_for_slew_finish(self):
         """Waits until coordinates equal target coordinates within tolerance.
            Disables all (except STOP) buttons until target coordinates are reached.
-           The counter parameter counts the number of seconds (or rather calls) 
-           the program is waiting.
-           With this parameter it is possible to break the loop 
-           if the coordinates are not reached for some reason.
-           The call_limit parameter defines the maximum number the function will call itself.
+           
+           Can be stopped
         """
         #Disable all buttons
         self.disable_all_buttons()
-        #Check if slew has finished and enable buttons if so.
+        #Check if slew has finished or self.stop_waiting parameter=True
+        #Enable buttons if so.
+        #self.stop_waiting parameter can be set by button in menubar
         #Then break the loop
         if super().slew_finished():
+            #Enable all buttons again
             self.enable_all_buttons()
-            self.slew_done=True
             return True
-        #If slewing has not finshed yet, increase the counter
-        counter=counter+1
-        #Check if the maximum number how often the function will call itself is reached
-        #If not funcion calls itself after 1 second
-        if counter<call_limit:
-            #Calls itself after 1 Second
-            self.master.after(1000,self.wait_for_slew_finish,counter)
-            return False
         else:
-            #If maximum number is reached: Enable all buttons again and exit the function
-            #This is not very safe but the best solution so far.
-            self.enable_all_buttons()
-            self.slew_target_button.config(state='disabled')
-            self.slew_done=True
-            return False
+            #Calls itself after 1 second.
+            #After call is asigned to global variable waiting 
+            #to stop it via stop_waiting.
+            global waiting
+            waiting=self.master.after(1000,self.wait_for_slew_finish)
+    
+    def stop_waiting(self):
+        """Stops Waiting for slew to finish and enables all buttons.
+        
+           Can be called in the menu.
+        """
+        #First disable all buttons to avoid binding events more than once.
+        self.disable_all_buttons()
+        #Enable all buttons 
+        self.enable_all_buttons()
+        #And try to stop waiting if waiting is going on.
+        try:
+            self.master.after_cancel(waiting)
+        except NameError:
+            return 0
+            
+        
     def disable_all_buttons(self):
         """ Disables all buttons and unbinds all bindings.
             Except of Stop Button
@@ -632,7 +671,6 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.precision_button.config(state='disabled')
         self.sync_button.config(state='disabled')
-        self.park_button.config(state='disabled')
         
         #Radiobuttons
         for child in self.radiobutton_frame.winfo_children():
@@ -660,7 +698,6 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.precision_button.config(state='normal')
         self.sync_button.config(state='normal')
-        self.park_button.config(state='normal')
         
         #Enable and bind entry widgets in target_frame
         for child in self.target_frame.winfo_children():

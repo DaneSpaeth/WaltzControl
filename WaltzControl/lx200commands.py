@@ -35,8 +35,8 @@ class Lx200Commands(com.CommunicationCommands):
         self.target_dec_float=False
         self.target_ha_float=False
         
-        #Store if slewing is finished
-        self.slew_done=True
+        ##Store if slewing is finished
+        #self.slew_done=True
         
     
     def get_coordinates(self):
@@ -631,7 +631,7 @@ class Lx200Commands(com.CommunicationCommands):
         tolerance_hours=2/(15*3600)
         if (abs(self.ra_float-self.target_ra_float)<tolerance_hours and
             abs(self.dec_float-self.target_dec_float)<tolerance_deg):
-            self.slew_done=True
+            #self.slew_done=True
             return True
         else:
             return False
@@ -647,6 +647,29 @@ class Lx200Commands(com.CommunicationCommands):
         #Set coordinates
         self.set_target_ra_from_string(self.LST)
         self.set_target_dec_from_string('+49 23 32')
+        #Slew to target
+        self.slew_to_target()
+        
+    def primary_mirror_pos(self):
+        """Calculate position to insert primary mirror cover and slew there.
+        """
+        #Calculate LST
+        self.get_LST()
+        #Set coordinates 
+        self.set_target_ra_from_string(self.LST)
+        self.set_target_dec_from_string('+05 00 00')
+        #Slew to target
+        self.slew_to_target()
+        
+    def secondary_mirror_pos(self):
+        """Calculate position to insert secondary mirror cover 
+           and telescope cover and slew there.
+        """
+        #Calculate LST
+        self.get_LST()
+        #Set coordinates 
+        self.set_target_ra_from_string(self.LST)
+        self.set_target_dec_from_string('-20 00 00')
         #Slew to target
         self.slew_to_target()
         
