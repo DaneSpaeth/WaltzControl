@@ -647,6 +647,14 @@ class WaltzGUI(lx.Lx200Commands):
             self.master.after_cancel(waiting)
         except NameError:
             return 0
+        
+    def delete_entries(self,event):
+        """ Deletes entries of target_ra and target_dec.
+        
+            Used when entering new Hipparcos Number.
+        """
+        self.target_ra_entry.delete(0,END)
+        self.target_dec_entry.delete(0,END)
             
         
     def disable_all_buttons(self):
@@ -704,6 +712,12 @@ class WaltzGUI(lx.Lx200Commands):
             child.config(state='normal')
         
         #Add the bindings manually
+        #When entering any new number or char (also when deleting),
+        #the entries of target_ra and target_dec should be deleted
+        #Important to bind Return and Tab after this first binding to override this functionality
+        #Otherwiese it would also just delete the entries
+        self.HIP_entry.bind("<Key>",
+                            self.delete_entries,add='+')
         self.HIP_entry.bind("<Return>",
                             self.set_hip_target_from_entry, add="+")
         self.HIP_entry.bind("<Tab>",
