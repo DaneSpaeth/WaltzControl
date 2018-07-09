@@ -30,6 +30,9 @@ class Lx200Commands(com.CommunicationCommands):
         #Store the Target coordinates as strings
         self.target_ra=False
         self.target_dec=False
+        #Store only valid target_coordinates as list
+        #0. Position meant to portray target_ra, 1. target_dec
+        self.valid_target=[0,0]
         #Store the target coordinates as floats
         self.target_ra_float=False
         self.target_dec_float=False
@@ -282,6 +285,7 @@ class Lx200Commands(com.CommunicationCommands):
                     return 0
                 else:
                     #Define input to serial, variable target_ra and target_ra_float
+            
                     inp='#:Sr{}:{}#'.format(ra_h, ra_m)
                     self.target_ra='{}h{}m'.format(ra_h, ra_m)
                     self.target_ra_float=int(ra_h)+float(ra_m)/60.
@@ -310,20 +314,21 @@ class Lx200Commands(com.CommunicationCommands):
             self.target_ra=False
             return 0
         #Check if the input is observable and write input to serial port if yes
-        #self.check_limits()
-        #if not self.target_ra_hard_limit_reached:
-        #    inp=inp.encode()
-        #    self.write(inp)
-        #else:
-        #    print('Target RA currently not observable')
+    
+        ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
+        ### if Koordinaten ok ###
+        
         inp=inp.encode()
         self.write(inp)
+        #Set target_ra to valid_target
+        self.valid_target[0]=self.target_ra
+        
         #Receive 1 if input is valid and 0 if not
         #Convert to boolean
         #valid_input=self.get_response()
         valid_input='1'
         try:
-            valid_input=bool(int(valid_input))
+            valid_input=bool(int(valid_input[0]))
         except ValueError:
             print('Received unexpected response!')
             return 0
@@ -356,7 +361,7 @@ class Lx200Commands(com.CommunicationCommands):
             #First strip of all whitespaces in front or behind string.
             dec=match_obj.group().strip()
             #Check if there is already a sign in front. 
-            #If not: assume it to be positive and insert it aa the frist character.
+            #If not: assume it to be positive and insert it as the frist character.
             if dec[0]!='+' and dec[0]!='-':
                 dec='+'+dec
             #Case 1 dd mm
@@ -371,6 +376,9 @@ class Lx200Commands(com.CommunicationCommands):
                     self.target_dec=False
                     return 0
                 else:
+                    ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
+                    ### if Koordinaten ok ###
+                    
                     #Define input to serial, variable target_dec and target_dec_float
                     inp='#:Sd{}*{}#'.format(dec_d, dec_m)
                     self.target_dec="{}°{}'".format(dec_d, dec_m)
@@ -393,6 +401,9 @@ class Lx200Commands(com.CommunicationCommands):
                     self.target_dec=False
                     return 0
                 else:
+                    ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
+                    ### if Koordinaten ok ###
+                    
                     #Define input to serial, variable target_dec and target_dec_float
                     inp='#:Sd{}*{}:{}#'.format(dec_d, dec_m, dec_s)
                     self.target_dec='''{}°{}'{}"'''.format(dec_d, dec_m, dec_s)
@@ -409,20 +420,19 @@ class Lx200Commands(com.CommunicationCommands):
             print('Invalid Input! Use Format "[+/-]dd mm ss" OR "[+/-]dd mm"')
             return 0
         #Check if the input is observable and write input to serial port if yes
-        #self.check_limits()
-        #if not self.target_dec_hard_limit_reached:
-        #    inp=inp.encode()
-        #    self.write(inp)
-        #else:
-        #    print('Target DEC not observable')
+        
+        ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
+        ### if Koordinaten ok ###
         inp=inp.encode()
         self.write(inp)
-        #Receive '1' if input is valid and '0' if not
+        #Set target_dec to valid_target
+        self.valid_target[1]=self.target_dec
+        #Receive '1#' if input is valid and '0#' if not
         #Convert to boolean
         #valid_input=self.get_response()
         valid_input='1'
         try:
-            valid_input=bool(int(valid_input))
+            valid_input=bool(int(valid_input[0]))
         except ValueError:
             print('Received unexpected response!')
             return 0

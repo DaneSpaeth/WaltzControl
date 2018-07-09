@@ -236,7 +236,7 @@ class WaltzGUI(lx.Lx200Commands):
                                        font=('arial', 12, 'bold'),
                                        bg='LightGrey',
                                        command=self.sync_yes_no,
-                                       state='normal')
+                                       state='disabled')
         self.sync_button.grid(row=0,column=1,padx=5)
         
         
@@ -281,7 +281,7 @@ class WaltzGUI(lx.Lx200Commands):
                                          text="Slew to Target",
                                          font=('arial', 15),
                                          bg='LightGrey',
-                                         state='normal',
+                                         state='disabled',
                                          command=self.slew_to_target_buttonclick)
         self.slew_target_button.grid(row=3,columnspan=2)
         
@@ -496,8 +496,15 @@ class WaltzGUI(lx.Lx200Commands):
         """Slews to target.
            Target must be set before via set_target_dec_from_string and set_target_ra_from_string
         """
+        #Slew to target and wait for slew to finish
         super().slew_to_target()
         self.wait_for_slew_finish()
+        
+        #After slewing (and if something went wrong):
+        #Set all valid_target entries to 0 (controller won't let you slew to
+        #the same coordinates twice
+        self.valid_target=[0,0]
+        self.slew_target_button.config(state='disabled')
     
     #def continue_slew(self,initial_target_ra, initial_target_dec):
         """ Continues slewing after possible initial slew to medium position.
@@ -560,6 +567,11 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_ra_entry.insert(0, self.target_ra)
         self.target_dec_entry.delete(0, END)
         self.target_dec_entry.insert(0, self.target_dec)
+        
+        #Check if there are valid coordinates set and enable slew button
+        if 0 not in self.valid_target:
+            self.slew_target_button.config(state='normal')
+            self.sync_button.config(state='normal')
            
     def set_target_ra_from_entry(self, event):
         """ Gets a ra input from the target_ra_entry widget and sets it as target_ra.
@@ -572,6 +584,10 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_ra_entry.insert(0, self.target_ra)
         self.HIP_entry.delete(0, END)
         
+        #Check if there are valid coordinates set and enable slew button
+        if 0 not in self.valid_target:
+            self.slew_target_button.config(state='normal')
+        
     def set_target_dec_from_entry(self, event):
         """ Gets a dec input from the target_dec_entry widget and sets it as target_ra.
             Accepted formats include dd mm ss and dd mm.
@@ -582,6 +598,10 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_dec_entry.delete(0, END)
         self.target_dec_entry.insert(0, self.target_dec)
         self.HIP_entry.delete(0, END)
+        
+        #Check if there are valid coordinates set and enable slew button
+        if 0 not in self.valid_target:
+            self.slew_target_button.config(state='normal')
         
     def sync_yes_no(self):
         """Displays yes/no message if sync_button is clicked on.
@@ -604,11 +624,20 @@ class WaltzGUI(lx.Lx200Commands):
             self.target_ra_entry.insert(0, self.target_ra)
             self.target_dec_entry.delete(0, END)
             self.target_dec_entry.insert(0, self.target_dec)
-            return None
-        self.set_target_ra_from_entry(None)
-        self.set_target_dec_from_entry(None)
-        if hip_nr=='' and self.target_ra and self.target_dec:
-            super().sync_on_coordinates()
+        else:
+            #If no Hip target_ get coordinates from entries
+            #None refers to no event (such as Return)
+            self.set_target_ra_from_entry(None)
+            self.set_target_dec_from_entry(None)
+            if hip_nr=='' and self.target_ra and self.target_dec:
+                super().sync_on_coordinates()
+            else:
+                print('No valid coordinates set. Synchronisation stopped')
+        #After sync (and if something went wrong):
+        #Set all valid_target entries to 0 (controller won't let you slew to
+        #the same coordinates twice
+        self.valid_target=[0,0]
+        self.slew_target_button.config(state='disabled')
             
     def wait_for_slew_finish(self):
         """Waits until coordinates equal target coordinates within tolerance.
@@ -710,12 +739,13 @@ class WaltzGUI(lx.Lx200Commands):
         #Enable and bind entry widgets in target_frame
         for child in self.target_frame.winfo_children():
             child.config(state='normal')
-        
+        #Do not enable slew button
+        self.slew_target_button.config(state='disabled')
         #Add the bindings manually
         #When entering any new number or char (also when deleting),
         #the entries of target_ra and target_dec should be deleted
         #Important to bind Return and Tab after this first binding to override this functionality
-        #Otherwiese it would also just delete the entries
+        #Otherwise it would also just delete the entries
         self.HIP_entry.bind("<Key>",
                             self.delete_entries,add='+')
         self.HIP_entry.bind("<Return>",
