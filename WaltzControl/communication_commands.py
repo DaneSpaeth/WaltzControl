@@ -1,7 +1,14 @@
-#import serial
+
 import time
 
-import fakeSerial as serial
+#On Office PC module serial is not available (and not needed)
+#Check if serial is available and connect to fakeSerial if not
+try:
+    import serial
+    print('Importing serial')
+except ImportError:
+    print('Importing fakeSerial')
+    import fakeSerial as serial
 
 class CommunicationCommands(serial.Serial):
     """ Inherits from Serial class and adds basic communication functions """

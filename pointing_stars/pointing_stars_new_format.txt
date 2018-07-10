@@ -1,2 +1,1 @@
 HIP       RA           DEC           HA            Target_RA    Target_DEC    LST         UTC         Date
-000012    00h01m06s    -35°51'17"    +09h12h00s    00h01m06s    -35°51'17"    09:13:06    13:28:26    09.07.2018
