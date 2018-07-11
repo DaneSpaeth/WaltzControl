@@ -524,20 +524,67 @@ class WaltzGUI(lx.Lx200Commands):
             #If previous slew is not finished the funcion will call itself every second.
             #self.master.after(1000, self.continue_slew, initial_target_ra, initial_target_dec)
         
-    def park_telescope_buttonclick(self):
+    def park_telescope_buttonclick(self,counter=1,park=True):
         """Parks telescope and waits for slew to finish.
+           
+           counter counts if parking is executed the first or 
+           second time.
+           park specifies if controller gets a parking command 
+           or if the function just waits until first slew has finished.
         """
         #We need to call park telescope twice 
         #because the tracking will change RA while DEC is still adjusting
         #Park telescope for the first time
-        super().park_telescope()
-        self.wait_for_slew_finish()
-        #Park telescope for the second time
-        super().park_telescope()
-        self.wait_for_slew_finish()
-        message=("Turn off the telescope controller to stop tracking"+
+        if counter==1:
+            #If parking is activated
+            if park:
+                print('Slew to Park Position the first time')
+                #Slew telescope to parking position
+                super().park_telescope()
+            #Start waiting: Call wait_for_slew_finish with call_itself=False
+            #So the funtion will just check if slew has finished
+            if not self.wait_for_slew_finish(call_itself=False):
+                #If slew has not yet finished
+                print('Waiting for First Parking to finish')
+                #Call the park funtion after 1 sec with counter=1 and slew=False
+                #So it will be in counter=1 loop but will not send 
+                #a park command to the controller
+                self.master.after(1000,self.park_telescope_buttonclick,
+                                  1,False)
+                return 0
+            else:
+                #If slewing has finished
+                #Disable all buttons (need because it will otherwise wait
+                #for one second until it disables again)
+                self.disable_all_buttons()
+                print('Finished First Parking')
+                #Call park function again after 1 second but enter counter=2 loop
+                #Also activate parking again with park=True
+                #Useful to wait one second as safetiy that slewing has stopped
+                self.master.after(1000,self.park_telescope_buttonclick,
+                                  2,True)
+                return 0
+        #Second Parking loop
+        if counter==2:
+            if park:
+                #If parking is activated
+                print('Slew to Park Position the second time')
+                #Slew telescope to parking position
+                super().park_telescope()
+                #Wait again as above. But call counter=2 fpr second parking loop
+            if not self.wait_for_slew_finish(call_itself=False):
+                print('Waiting for Second Parking to finish')
+                self.master.after(1000,self.park_telescope_buttonclick,
+                                  2,False)
+                return 0
+            else:
+                #When slewing is done
+                print('Finished Second Parking')
+                #Show message box to tell user to shut off the controller
+                message=("Turn off the telescope controller to stop tracking"+
                  " and remain in park position!")
-        messagebox.showinfo("Information",message=message,parent=self.master)
+                messagebox.showinfo("Information",message=message,parent=self.master)
+                return 0 
         
     def primary_mirror_pos_buttonclick(self):
         """Slew Telescope to Primary Mirror Cover Position.
@@ -639,11 +686,14 @@ class WaltzGUI(lx.Lx200Commands):
         self.valid_target=[0,0]
         self.slew_target_button.config(state='disabled')
             
-    def wait_for_slew_finish(self):
+    def wait_for_slew_finish(self,call_itself=True):
         """Waits until coordinates equal target coordinates within tolerance.
            Disables all (except STOP) buttons until target coordinates are reached.
+           call_itself determines if funtion will call itself after 1 second.
+           This is very useful to set to False if you want to call waiting from
+           different function that should pause until waiting is over.
            
-           Can be stopped
+           Can be stopped by stop_waiting.
         """
         #Disable all buttons
         self.disable_all_buttons()
@@ -656,11 +706,14 @@ class WaltzGUI(lx.Lx200Commands):
             self.enable_all_buttons()
             return True
         else:
+            #If variable call_itself is true
             #Calls itself after 1 second.
             #After call is asigned to global variable waiting 
             #to stop it via stop_waiting.
-            global waiting
-            waiting=self.master.after(1000,self.wait_for_slew_finish)
+            if call_itself:
+                global waiting
+                waiting=self.master.after(1000,self.wait_for_slew_finish)
+            return False
     
     def stop_waiting(self):
         """Stops Waiting for slew to finish and enables all buttons.
