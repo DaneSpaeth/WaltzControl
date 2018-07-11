@@ -2,7 +2,7 @@ import time
 import re
 import threading
 import pathlib
-
+import math
 
 from astropy.time import Time
 
@@ -112,21 +112,36 @@ class Lx200Commands(com.CommunicationCommands):
     def calculate_hour_angle(self):
         """ Takes self.ra and self.LST and calculates hour angle
         """
-        #Caution: It does not recalculate LST. So if you use it outisde GUI it could lead to wrong results.
+        #Caution: It does not recalculate LST. So if you use it outside GUI it could lead to wrong results.
         #Make sure LST is refreshed.
-        #If No Connection and therofre self.ra_float=0, close program
+        #If No Connection and therefore self.ra_float=0, close function
         if self.ra_float==0:
             return 0
         #Compute the hour angle in range [-12,12]
-        self.ha_float=(self.LST_float-self.ra_float)%24
+        self.ha_float=(self.LST_float-self.ra_float)
+        #hour angles larger than 12 should be converted to negative numbers
+        #e.g. 13 to -11
         if self.ha_float>12.:
             self.ha_float=self.ha_float-24.
+        #Get the sign of ha_float
+        if self.ha_float>=0:
+            sign='+'
+        elif self.ha_float<0:
+            sign='-'
+        #Calculate the absolute of ha_float to convert it to hh mm ss
+        ha_float=abs(self.ha_float)
         #Format hour angle to hh:mm:ss
-        ha_float_seconds=round(self.ha_float*3600)
-        (minutes,seconds)=divmod(ha_float_seconds,60)
-        (hours,minutes)=divmod(minutes,60)
-        
-        self.ha='{:+03}h{:02}h{:02}s'.format(hours,minutes,seconds)
+        hours=int(ha_float)
+        rest=abs(ha_float-hours)*60
+        minutes=int(rest)
+        rest=abs(rest-minutes)*60
+        #We want to round seconds to get a more continous updating of seconds
+        seconds=round(rest)
+        #But we have to take care of rounding up to 60. Increase minutes by one in that case.
+        if seconds==60:
+            seconds=0
+            minutes=minutes+1
+        self.ha='{}{:02}h{:02}m{:02}s'.format(sign,hours,minutes,seconds)
         
         
     def start_move_west(self):
@@ -574,20 +589,19 @@ class Lx200Commands(com.CommunicationCommands):
         LST_now=str(LST_now)
         (hours,h,rest)=LST_now.partition('h')
         #Add a zero to hours if single number
-        hours='{:02}'.format(int(hours))
+        hours=int(hours)
         (minutes,m,rest)=rest.partition('m')
-        minutes='{:02}'.format(int(minutes))
+        minutes=int(minutes)
         (seconds,s,rest)=rest.partition('s')
         #Round the seconds (format 12.545 to 13)
+        #We want to round to get a more continous refreshing of the seconds
         seconds=round(float(seconds))
-        seconds='{:02}'.format(seconds)
-        
-        #If the decimal after seconds was exactly 0 the partition above 
-        #doesn't work properly. We would then be left with e.g. seconds='12s'
-        #We want to get rid of the 's' in this case
-        if len(seconds)>2:
-            seconds=seconds[0:2]
-        LST_now='{}:{}:{}'.format(hours, minutes, seconds)
+        #With rounding we could get 60 for seconds
+        #In that case increse minutes by 1 and set seconds to 0
+        if seconds ==60:
+            seconds=0
+            minutes=minutes+1
+        LST_now='{:02}:{:02}:{:02}'.format(hours, minutes, seconds)
         #if String has changed update it
         if LST_now != self.LST:
             self.LST=LST_now
@@ -675,7 +689,7 @@ class Lx200Commands(com.CommunicationCommands):
         self.get_LST()
         #Set coordinates 
         self.set_target_ra_from_string(self.LST)
-        self.set_target_dec_from_string('-20 00 00')
+        self.set_target_dec_from_string('-25 00 00')
         #Slew to target
         self.slew_to_target()
         

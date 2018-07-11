@@ -1,8 +1,18 @@
-import numpy as np
+import math
 
-valid_target=[True,True]
+ha_float=-0.0001
 
-if 0 not in valid_target:
-    print('No zero')
-else:
-    print('Found zero')
+hours=int(ha_float)
+print(hours)
+rest=abs(ha_float-hours)
+print(rest)
+minutes=int(rest*60)
+print(minutes)
+rest=abs(rest*60-minutes)
+print(rest)
+seconds=round(rest*60)
+print(seconds)
+print(hours,minutes,seconds)
+
+sign=math.copysign(1,ha_float)
+print(sign)

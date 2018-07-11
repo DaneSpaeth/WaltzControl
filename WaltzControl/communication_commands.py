@@ -25,7 +25,7 @@ class CommunicationCommands(serial.Serial):
            Gives answer to self.connected.
            All modules can acces this variable.
         """
-        if self.is_open():
+        if self.is_open:
             self.connected=True
         else:
             self.connected=False
