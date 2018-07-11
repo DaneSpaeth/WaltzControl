@@ -878,7 +878,7 @@ class WaltzGUI(lx.Lx200Commands):
         parrent_path=current_path.parent
         file_path=parrent_path / 'pointing_stars' / 'pointing_stars.txt'
         #With automatically closes the file in the end
-        with open(file_path, 'a') as ps_file:
+        with open(str(file_path), 'a') as ps_file:
             print('Saving pointing star to (old format) file')
             ps_file.write(line)
             
@@ -901,7 +901,7 @@ class WaltzGUI(lx.Lx200Commands):
         parrent_path=current_path.parent
         file_path=parrent_path / 'pointing_stars' / 'pointing_stars_new_format.txt'
         #With automatically closes the file in the end
-        with open(file_path, 'a') as ps_file:
+        with open(str(file_path), 'a') as ps_file:
             print('Saving pointing star to (new format) file')
             ps_file.write(line)
             
