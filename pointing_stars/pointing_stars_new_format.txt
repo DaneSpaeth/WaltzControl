@@ -1,1 +1,1 @@
-HIP       RA           DEC           HA            Target_RA    Target_DEC    LST         UTC         Date
+HIP    RA    RA_float[h]    DEC    DEC_float[°]    HA    HA_float[h]    Target_RA    Target_RA_float[h]    Target_DEC    Target_DEC_float[°]    Target_HA_float[h]    LST    UTC    Date

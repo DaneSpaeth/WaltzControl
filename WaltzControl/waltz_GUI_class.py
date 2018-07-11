@@ -884,13 +884,20 @@ class WaltzGUI(lx.Lx200Commands):
             
             
         ### New Format File ###
-        line="{}    {}    {}    {}    {}    {}    {}    {}    {}\n"
+        line=("{}    {}    {}    {}    {}    {}    {}    {}    {}"
+            "    {}    {}    {}    {}    {}    {}\n")
         line=line.format(hip_pointing,
                          self.ra,
+                         self.ra_float,
                          self.dec,
+                         self.dec_float,
                          self.ha,
+                         self.ha_float,
                          self.target_ra,
+                         self.target_ra_float,
                          self.target_dec,
+                         self.target_dec_float,
+                         self.target_ha_float,
                          self.LST,
                          self.UTC,
                          Date_pointing)

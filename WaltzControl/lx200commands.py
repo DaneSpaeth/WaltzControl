@@ -110,7 +110,8 @@ class Lx200Commands(com.CommunicationCommands):
             self.dec_float=0
             
     def calculate_hour_angle(self):
-        """ Takes self.ra and self.LST and calculates hour angle
+        """ Takes self.ra and self.LST and calculates hour angle.
+            Also calculates hour angle of target as float.
         """
         #Caution: It does not recalculate LST. So if you use it outside GUI it could lead to wrong results.
         #Make sure LST is refreshed.
@@ -119,10 +120,13 @@ class Lx200Commands(com.CommunicationCommands):
             return 0
         #Compute the hour angle in range [-12,12]
         self.ha_float=(self.LST_float-self.ra_float)
+        self.target_ha_float=(self.LST_float-self.target_ra_float)
         #hour angles larger than 12 should be converted to negative numbers
         #e.g. 13 to -11
         if self.ha_float>12.:
             self.ha_float=self.ha_float-24.
+        if self.target_ha_float>12.:
+            self.target_ha_float=self.target_ha_float-24.
         #Get the sign of ha_float
         if self.ha_float>=0:
             sign='+'
