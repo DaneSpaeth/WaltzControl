@@ -304,7 +304,7 @@ class Lx200Commands(com.CommunicationCommands):
                     #Define input to serial, variable target_ra and target_ra_float
             
                     inp='#:Sr{}:{}#'.format(ra_h, ra_m)
-                    self.target_ra='{}h{}m'.format(ra_h, ra_m)
+                    self.target_ra='{} {}'.format(ra_h, ra_m)
                     self.target_ra_float=int(ra_h)+float(ra_m)/60.
             #Case 2 hh mm ss (also with units)
             elif ra[5]==' ' or ra[5]=='m' or ra[5]==':':
@@ -320,7 +320,7 @@ class Lx200Commands(com.CommunicationCommands):
                 else:
                     #Define input to serial, variable target_ra and target_ra_float
                     inp='#:Sr{}:{}:{}#'.format(ra_h, ra_m, ra_s)
-                    self.target_ra='{}h{}m{}s'.format(ra_h, ra_m, ra_s)
+                    self.target_ra='{} {} {}'.format(ra_h, ra_m, ra_s)
                     self.target_ra_float=int(ra_h)+int(ra_m)/60.+int(ra_s)/3600.
             else:
                 print('Invalid Input! Use Format "hh mm ss" OR "hh mm.t"')
@@ -398,7 +398,7 @@ class Lx200Commands(com.CommunicationCommands):
                     
                     #Define input to serial, variable target_dec and target_dec_float
                     inp='#:Sd{}*{}#'.format(dec_d, dec_m)
-                    self.target_dec="{}°{}'".format(dec_d, dec_m)
+                    self.target_dec="{} {}".format(dec_d, dec_m)
                     #Take care of right sign
                     if dec_d[0]=='+':
                         self.target_dec_float=(int(dec_d)+
@@ -423,7 +423,7 @@ class Lx200Commands(com.CommunicationCommands):
                     
                     #Define input to serial, variable target_dec and target_dec_float
                     inp='#:Sd{}*{}:{}#'.format(dec_d, dec_m, dec_s)
-                    self.target_dec='''{}°{}'{}"'''.format(dec_d, dec_m, dec_s)
+                    self.target_dec='''{} {} {}'''.format(dec_d, dec_m, dec_s)
                     #Take care of right sign
                     if dec_d[0]=='+':
                         self.target_dec_float=(int(dec_d)+
@@ -479,6 +479,7 @@ class Lx200Commands(com.CommunicationCommands):
             #else:
                 #print('Error: Slewing not possible!')
             print("Response from serial port:",out)
+            print('Test: Function: lx200commands.slew_to_target()')
         else:
             return 0
     
