@@ -22,7 +22,7 @@ class Serial:
         self.stopbits = stopbits
         self.xonxoff  = xonxoff
         self.rtscts   = rtscts
-        self._isOpen  = True
+        self.is_open  = True
         self._receivedData = b''
         self._data = b''
         self.fake_ra=b"15:15:00#"
@@ -33,17 +33,17 @@ class Serial:
     # isOpen()
     # returns True if the port to the Arduino is open.  False otherwise
     def is_open( self ):
-        return self._isOpen
+        return self.is_open
 
     # open()
     # opens the port
     def open( self ):
-        self._isOpen = True
+        self.is_open = True
 
     # close()
     # closes the port
     def close( self ):
-        self._isOpen = False
+        self.is_open = False
 
     # write()
     # writes a string of characters to the Arduino
@@ -115,7 +115,7 @@ class Serial:
     # returns a string representation of the serial class
     def __str__( self ):
         return  "Serial<id=0xa81c10, open=%s>( port='%s', baudrate=%d," \
-               % ( str(self.isOpen), self.port, self.baudrate ) \
+               % ( str(self.is_open), self.port, self.baudrate ) \
                + " bytesize=%d, parity='%s', stopbits=%d, xonxoff=%d, rtscts=%d)"\
                % ( self.bytesize, self.parity, self.stopbits, self.xonxoff,
                    self.rtscts )

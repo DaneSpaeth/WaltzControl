@@ -43,11 +43,17 @@ class Lx200Commands(com.CommunicationCommands):
     def get_coordinates(self):
         """ Gets Right ascension and Declination from the telescope controller and prints the values.
             We chose apropriate Output formats.
+            
+            Additionally checks if connection is open.
         """
         #Right Ascension
         inp=b'#:GR#'
         self.write(inp)
         unformated_ra=self.get_response()
+        
+        #Check connection with unformated_ra
+        super().check_connection_via_response(unformated_ra)
+        
         #Format hh mm.t
         if len(unformated_ra)==9:
             #Formating string output Right Ascension
@@ -108,6 +114,9 @@ class Lx200Commands(com.CommunicationCommands):
         else:
             self.dec=unformated_dec
             self.dec_float=0
+            
+        #Check connection with unformated_dec
+        super().check_connection_via_response(unformated_dec)
             
     def calculate_hour_angle(self):
         """ Takes self.ra and self.LST and calculates hour angle.

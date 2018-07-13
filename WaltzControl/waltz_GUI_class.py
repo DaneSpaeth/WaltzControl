@@ -296,7 +296,6 @@ class WaltzGUI(lx.Lx200Commands):
         """ Closes the connection to serial and responds properly to it
         """
         #First check the connection state
-        super().check_connection
         if self.connected==False:
             print('Connection already closed')
             return 0
@@ -304,7 +303,6 @@ class WaltzGUI(lx.Lx200Commands):
         super().close_connection()
         #Check if connection is realy closed
         #this will set self.connected=False
-        super().check_connection()
         #Respond to closed connection
         self._respond_to_connection_state()
         
@@ -313,16 +311,12 @@ class WaltzGUI(lx.Lx200Commands):
         """ Closes the connection to serial and responds properly to it
         """
         #First check the connection state
-        super().check_connection
         if self.connected==True:
             print('Connection already open')
             return 0
-        #Close serial connection
+        #Open serial connection
         super().open_connection()
-        #Check if connection is realy closed
-        #this will set self.connected=False
-        super().check_connection()
-        #Respond to closed connection
+        #Respond to open connection
         self._respond_to_connection_state()
     
     
@@ -436,6 +430,8 @@ class WaltzGUI(lx.Lx200Commands):
         self.get_coordinates()
         self.RA_display.config(text=self.ra)
         self.DEC_display.config(text=self.dec)
+        if not self.connected:
+            self._respond_to_connection_state()
         self.master.after(500,self.display_coordinates)
         
     def interchange_west_east(self):
