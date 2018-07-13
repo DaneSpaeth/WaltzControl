@@ -41,7 +41,10 @@ class WaltzGUI(lx.Lx200Commands):
         #settings_menu
         settings_menu=Menu(menubar, tearoff=0)
         settings_menu.add_command(label="Enable buttons",command=self.stop_waiting)
+        settings_menu.add_command(label="Toggle Precision",command=super().toggle_precision)
         menubar.add_cascade(label="Settings",menu=settings_menu)
+        
+        
         
         #Pointing_stars_menu
         pointing_stars_menu=Menu(menubar, tearoff=0)
@@ -222,22 +225,15 @@ class WaltzGUI(lx.Lx200Commands):
         
         #Options Frame
         self.options_frame=Frame(master)
-        self.options_frame.grid(row=0,rowspan=1,column=3,padx=20)
-        
-        self.precision_button = Button(self.options_frame,
-                                       text="Toggle \n Precision",
-                                       font=('arial', 12, 'bold'),
-                                       bg='LightGrey',
-                                       command=super().toggle_precision)
-        self.precision_button.grid(row=0,column=0,padx=5)
-        
+        self.options_frame.grid(row=0,column=3,padx=20)
+     
         self.sync_button = Button(self.options_frame,
                                        text="Synchronize \n with Target",
                                        font=('arial', 12, 'bold'),
                                        bg='LightGrey',
                                        command=self.sync_yes_no,
                                        state='disabled')
-        self.sync_button.grid(row=0,column=1,padx=5)
+        self.sync_button.grid(row=0,column=0,padx=5)
         
         
         
@@ -342,13 +338,17 @@ class WaltzGUI(lx.Lx200Commands):
             return 0
         
         #Commands for initial settings
-        self.toggle_precision()
         self.set_speed_guide()
         #This is the StringVar defining which initial setting the speed Radiobuttons have
         self.speed.set('Guide')
         
         #Commands to be executed all the time (if connection is open)
         self.display_coordinates()
+        
+        #Check for format of coordinates and toggle automatically
+        #We always want format DEC=dd mm ss
+        if len(self.dec)==7:
+            super().toggle_precision()
     def _respond_to_connection_state(self):
         """ Checks connection to serial port.
             Print Warning if not and closes program.
@@ -759,7 +759,6 @@ class WaltzGUI(lx.Lx200Commands):
             child.unbind("<Tab>")
         
         
-        self.precision_button.config(state='disabled')
         self.sync_button.config(state='disabled')
         
         #Radiobuttons
@@ -786,7 +785,6 @@ class WaltzGUI(lx.Lx200Commands):
         self.east_button.bind("<ButtonRelease-1>",self.stop_move_east_buttonclick)
         
         
-        self.precision_button.config(state='normal')
         self.sync_button.config(state='normal')
         
         #Enable and bind entry widgets in target_frame

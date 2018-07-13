@@ -26,7 +26,7 @@ class Serial:
         self._receivedData = b''
         self._data = b''
         self.fake_ra=b"15:15:00#"
-        self.fake_dec=b"+25:00:00#"
+        self.fake_dec=b"+25*00'00#"
         self.fake_target_ra=b''
         self.fake_target_dec=b''
         self.in_waiting=len(self._data)
