@@ -197,7 +197,7 @@ class WaltzGUI(lx.Lx200Commands):
                                   bg='Red',
                                   activeforeground='Red',
                                   activebackground='White',
-                                  command=super().stop_all)
+                                  command=super().stop_at_current_pos)
         self.stop_button.grid(row=3,column=0, columnspan=3, pady=10)
 
         #Radiobutton frame

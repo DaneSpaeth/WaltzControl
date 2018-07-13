@@ -184,10 +184,26 @@ class Lx200Commands(com.CommunicationCommands):
         self.write(inp)
         
     def stop_all(self):
+        """ Sends All Stop Commands to serial.
+            
+            Can't stop slew to target commands.
+            Not used in the moment
+        """
         self.stop_move_west()
         self.stop_move_east()
         self.stop_move_south()
         self.stop_move_north()
+        
+    def stop_at_current_pos(self):
+        """Sets current coordinates as target coordinates and slews there.
+        
+           Used as STOP command.
+           Normal Stop commands won't work during slew.
+        """
+        self.get_coordinates()
+        self.set_target_ra_from_string(self.ra)
+        self.set_target_dec_from_string(self.dec)
+        self.slew_to_target()
     
     def move_west(self,duration=0.1):
         """Moves telescope in the west direction for a specified duration at the current slew rate.
