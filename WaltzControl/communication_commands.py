@@ -17,8 +17,6 @@ class CommunicationCommands(serial.Serial):
         super().__init__(port='/dev/ttyS0',baudrate = 9600,timeout = 1)
         #Variable to save connection state
         self.connected=True
-        #Check connection
-        self.check_connection()
         
     def check_connection(self):
         """Checks if Connection to serial port is open.
@@ -28,7 +26,7 @@ class CommunicationCommands(serial.Serial):
            Gives answer to self.connected.
            All modules can acces this variable.
         """
-        if super().is_open:
+        if self.is_open:
             self.connected=True
         else:
             self.connected=False
@@ -52,7 +50,7 @@ class CommunicationCommands(serial.Serial):
             #Set self.connected to False
             self.connected=False
             #And close serial connection from this side
-            super().close()
+            #super().close()
             #Can be opened via menu
         #If you get any nonzero response
         elif expected_response:
