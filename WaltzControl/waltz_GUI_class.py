@@ -49,7 +49,6 @@ class WaltzGUI(lx.Lx200Commands):
         #Pointing_stars_menu
         pointing_stars_menu=Menu(menubar, tearoff=0)
         pointing_stars_menu.add_command(label="Pointing Star", command=self.save_pointing_star)
-        pointing_stars_menu.add_command(label="Pointing Limit", command=self.save_pointing_limit)
         menubar.add_cascade(label="Save as", menu= pointing_stars_menu)
         
         #Special_positions_menu
@@ -906,33 +905,3 @@ class WaltzGUI(lx.Lx200Commands):
         with open(str(file_path), 'a') as ps_file:
             print('Saving pointing star to (new format) file')
             ps_file.write(line)
-            
-    def save_pointing_limit(self):
-        """ Saves pointing limit to file.
-        """
-        
-        #Get Date in Format dd.mm.yyyy (using locale module)
-        today = datetime.date.today()
-        Date_limit=today.strftime('%d.%m.%Y')
-        
-        line=("{}    {}    {}    {}    {}    {}    {}    {}    {}\n")
-        line=line.format(self.ra,
-                         self.ra_float,
-                         self.dec,
-                         self.dec_float,
-                         self.ha,
-                         self.ha_float,
-                         self.LST,
-                         self.UTC,
-                         Date_limit)
-        
-        #Filename and path using pathlib module
-        #File is in parrent_directory/pointing_limits/limits.txt
-        current_path=pathlib.Path.cwd()
-        parrent_path=current_path.parent
-        file_path=parrent_path / 'pointing_limits' / 'limits.txt'
-        #With automatically closes the file in the end
-        with open(str(file_path), 'a') as ps_file:
-            print('Saving limit to file')
-            ps_file.write(line)
-        
