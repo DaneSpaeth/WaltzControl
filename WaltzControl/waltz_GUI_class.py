@@ -266,7 +266,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_dec_label = Label(self.target_frame,
                                       font=('arial', 15),
-                                      text="""Target DEC \n [dd mm ss]""")
+                                      text="""Target DEC \n [°° mm ss]""")
         self.target_dec_label.grid(row=2,column=0)
         
         self.target_dec_entry= Entry(self.target_frame,
@@ -878,14 +878,22 @@ class WaltzGUI(lx.Lx200Commands):
             
             
         ### New Format File ###
+        
+        #Format HA to hh mm ss
+        (HA_hours,h,rest)=self.ha.partition('h')
+        (HA_min,m,rest)=rest.partition('m')
+        (HA_sec,s,rest)=rest.partition('s')
+        HA_pointing="{} {} {}".format(HA_hours, HA_min, HA_sec)
+        
+        
         line=("{}    {}    {}    {}    {}    {}    {}    {}    {}"
             "    {}    {}    {}    {}    {}    {}\n")
         line=line.format(hip_pointing,
-                         self.ra,
+                         RA_pointing,
                          self.ra_float,
-                         self.dec,
+                         DEC_pointing,
                          self.dec_float,
-                         self.ha,
+                         HA_pointing,
                          self.ha_float,
                          self.target_ra,
                          self.target_ra_float,

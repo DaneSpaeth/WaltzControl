@@ -497,14 +497,7 @@ class Lx200Commands(com.CommunicationCommands):
         if coordinates_set:
             inp=b'#:MS#'
             self.write(inp)
-            out=self.get_response()
-            #For the moment we want to just test which output we get
-            #if out=='0':
-                #print('Slewing to target')
-            #else:
-                #print('Error: Slewing not possible!')
-            print("Response from serial port:",out)
-            print('Test: Function: lx200commands.slew_to_target()')
+            print('Slew to target')
         else:
             return 0
     
