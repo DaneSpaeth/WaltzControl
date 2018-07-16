@@ -48,8 +48,9 @@ class WaltzGUI(lx.Lx200Commands):
         
         #Pointing_stars_menu
         pointing_stars_menu=Menu(menubar, tearoff=0)
-        pointing_stars_menu.add_command(label="Save as Pointing Star", command=self.save_pointing_star)
-        menubar.add_cascade(label="Pointing Star", menu= pointing_stars_menu)
+        pointing_stars_menu.add_command(label="Pointing Star", command=self.save_pointing_star)
+        pointing_stars_menu.add_command(label="Pointing Limit", command=self.save_pointing_limit)
+        menubar.add_cascade(label="Save as", menu= pointing_stars_menu)
         
         #Special_positions_menu
         special_positions_menu=Menu(menubar, tearoff=0)
@@ -256,7 +257,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_ra_label = Label(self.target_frame,
                                      font=('arial', 15),
-                                     text="Target RA")
+                                     text="Target RA \n [hh mm ss]")
         self.target_ra_label.grid(row=1,column=0)
         
         self.target_ra_entry= Entry(self.target_frame,
@@ -266,7 +267,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_dec_label = Label(self.target_frame,
                                       font=('arial', 15),
-                                      text="Target DEC")
+                                      text="""Target DEC \n [°° '' ""]""")
         self.target_dec_label.grid(row=2,column=0)
         
         self.target_dec_entry= Entry(self.target_frame,
@@ -906,3 +907,32 @@ class WaltzGUI(lx.Lx200Commands):
             print('Saving pointing star to (new format) file')
             ps_file.write(line)
             
+    def save_pointing_limit(self):
+        """ Saves pointing limit to file.
+        """
+        
+        #Get Date in Format dd.mm.yyyy (using locale module)
+        today = datetime.date.today()
+        Date_limit=today.strftime('%d.%m.%Y')
+        
+        line=("{}    {}    {}    {}    {}    {}    {}    {}    {}\n")
+        line=line.format(self.ra,
+                         self.ra_float,
+                         self.dec,
+                         self.dec_float,
+                         self.ha,
+                         self.ha_float,
+                         self.LST,
+                         self.UTC,
+                         Date_limit)
+        
+        #Filename and path using pathlib module
+        #File is in parrent_directory/pointing_limits/limits.txt
+        current_path=pathlib.Path.cwd()
+        parrent_path=current_path.parent
+        file_path=parrent_path / 'pointing_limits' / 'limits.txt'
+        #With automatically closes the file in the end
+        with open(str(file_path), 'a') as ps_file:
+            print('Saving limit to file')
+            ps_file.write(line)
+        
