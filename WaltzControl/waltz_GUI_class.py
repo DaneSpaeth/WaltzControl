@@ -266,7 +266,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_dec_label = Label(self.target_frame,
                                       font=('arial', 15),
-                                      text="""Target DEC \n [°° '' ""]""")
+                                      text="""Target DEC \n [dd mm ss]""")
         self.target_dec_label.grid(row=2,column=0)
         
         self.target_dec_entry= Entry(self.target_frame,
