@@ -75,11 +75,17 @@ class CommunicationCommands(serial.Serial):
         exit()
         
     def close_connection(self):
-        super().close()
+        """ Closes Connection.
+        """
+        if self.is_open:
+            super().close()
         self.connected=False
     
     def open_connection(self):
-        super().open()
+        """ Opens Connection.
+        """
+        if not self.is_open:
+            super().open()
         self.connected=True
         
 
