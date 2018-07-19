@@ -574,8 +574,6 @@ class Lx200Commands(com.CommunicationCommands):
         """ Synchronizes telescope's coordinates with target coordinates.
             Target is set via Hipparcos identifier.
             Target needs to be aligned with the pinhole manually before.
-            
-            Could be wrong at this stage
         """
         #Assume you have aligned a Hipparcos star in the pinhole.
         #You know need to calculate the coordinates of the star again
@@ -586,19 +584,21 @@ class Lx200Commands(com.CommunicationCommands):
         self.set_hip_target(hip_nr)
         inp=b'#:CM#'
         self.write(inp)
+        output=self.get_response()
+        print('Response from serial port:',output)
         
     def sync_on_coordinates(self):
         """ Synchronizes telescope's coordinates with target coordinates.
             Target coordinates are set via manual input. 
             Target needs to be aligned with the pinhole manually before.
-            
-            Could be wrong at this stage
         """
         if self.target_ra and self.target_dec:
             self.set_target_ra_from_string(self.target_ra)
             self.set_target_dec_from_string(self.target_dec)
             inp=b'#:CM#'
             self.write(inp)
+            output=self.get_response()
+            print('Response from serial port:',output)
             
     def get_LST(self):
         """ Calculates the current Local Sidereal Time.
