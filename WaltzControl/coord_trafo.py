@@ -1,4 +1,4 @@
-from math import radians, degrees, sin, cos, asin
+from math import radians, degrees, sin, cos, tan, asin, atan2
 
 def equ_to_altaz(ha,dec):
     """ Transforms equatorial coordinates (hourangle, declination)
@@ -22,8 +22,13 @@ def equ_to_altaz(ha,dec):
     
     #Calculate altitude and azimuth (formulaes from celestial mechanics script
     #of Genevieve Parmentier)
+    #For altitudewe have the formula:
+    #sin(alt)=cos(ha)*cos(lat)*cos(dec)+sin(lat)*sin(dec))
     alt=asin(sin(lat)*sin(dec)+cos(lat)*cos(dec)*cos(ha))
-    az=asin(cos(dec)*sin(ha)/cos(alt))
+    
+    #For azimuth we have the formula
+    #tan(az)=-sin(ha)/(cos(lat)*tan(dec)-sin(lat)*cos(ha))
+    az=atan2(sin(ha),(-cos(lat)*tan(dec)+sin(lat)*cos(ha)))
     
     #Convert alt and az to degrees
     alt=degrees(alt)
