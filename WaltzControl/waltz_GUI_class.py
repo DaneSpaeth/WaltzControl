@@ -256,7 +256,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_ra_label = Label(self.target_frame,
                                      font=('arial', 15),
-                                     text="Target RA \n [hh mm ss]")
+                                     text="RA \n [hh mm ss]")
         self.target_ra_label.grid(row=1,column=0)
         
         self.target_ra_entry= Entry(self.target_frame,
@@ -266,12 +266,34 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_dec_label = Label(self.target_frame,
                                       font=('arial', 15),
-                                      text="""Target DEC \n [°° mm ss]""")
+                                      text="""DEC \n [°° mm ss]""")
         self.target_dec_label.grid(row=2,column=0)
         
         self.target_dec_entry= Entry(self.target_frame,
                                      font=('arial', 15))
         self.target_dec_entry.grid(row=2, column=1,pady=10)
+        
+        self.target_alt_label = Label(self.target_frame,
+                                     font=('arial', 15),
+                                     text="ALT")
+        self.target_alt_label.grid(row=1,column=2,padx=10)
+        
+        self.target_alt_display= Label(self.target_frame,
+                                    font=('arial', 15),
+                                    bg='light green',
+                                    width=9)
+        self.target_alt_display.grid(row=1, column=3,pady=10)
+        
+        self.target_az_label = Label(self.target_frame,
+                                     font=('arial', 15),
+                                     text="AZ")
+        self.target_az_label.grid(row=2,column=2,padx=10)
+        
+        self.target_az_display= Label(self.target_frame,
+                                    font=('arial', 15),
+                                    bg='light green',
+                                    width=9)
+        self.target_az_display.grid(row=2, column=3,pady=10)
         
         self.slew_target_button = Button(self.target_frame,
                                          text="Slew to Target",
@@ -279,7 +301,7 @@ class WaltzGUI(lx.Lx200Commands):
                                          bg='LightGrey',
                                          state='disabled',
                                          command=self.slew_to_target_buttonclick)
-        self.slew_target_button.grid(row=3,columnspan=2)
+        self.slew_target_button.grid(row=3,columnspan=4)
         
         #At first check if serial connection is open (also contains initial commands)
         self._respond_to_connection_state()
