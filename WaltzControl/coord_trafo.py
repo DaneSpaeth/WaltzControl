@@ -62,5 +62,3 @@ def equ_to_altaz(ha,dec):
     #Return altitude and azimuth
     return (alt,az,formated_coord_list[0],formated_coord_list[1])
 
-print(equ_to_altaz(-12,0))
-    

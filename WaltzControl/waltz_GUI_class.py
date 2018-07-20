@@ -514,6 +514,7 @@ class WaltzGUI(lx.Lx200Commands):
         """Slews to target.
            Target must be set before via set_target_dec_from_string and set_target_ra_from_string
         """
+        super().set_target_coordinates()
         #Slew to target and wait for slew to finish
         super().slew_to_target()
         self.wait_for_slew_finish()

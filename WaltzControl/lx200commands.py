@@ -8,6 +8,7 @@ from astropy.time import Time
 
 import communication_commands as com
 from hip_position_func import hip_position
+from coord_trafo import equ_to_altaz
 
 class Lx200Commands(com.CommunicationCommands):
     """Inherits from CommunicationCommands and thus from Serial.
@@ -30,6 +31,8 @@ class Lx200Commands(com.CommunicationCommands):
         #Store the Target coordinates as strings
         self.target_ra=False
         self.target_dec=False
+        self.target_alt=False
+        self.target_az=False
         #Store only valid target_coordinates as list
         #0. Position meant to portray target_ra, 1. target_dec
         self.valid_target=[0,0]
@@ -37,6 +40,8 @@ class Lx200Commands(com.CommunicationCommands):
         self.target_ra_float=False
         self.target_dec_float=False
         self.target_ha_float=False
+        self.target_alt_float=False
+        self.target_az_float=False
         
         
     
@@ -488,6 +493,32 @@ class Lx200Commands(com.CommunicationCommands):
         #So we for now just want to listen what serial port responds.
         output=self.get_response()
         print('Response from serial port:',output)
+        
+    def set_target_coordinates(self):
+        """ Sends target coordinates to serial port.
+        
+            Only function that may send target_coordinates to serial port.
+            Will check coordinates before.
+            Will also calculate and set target coordinates as alt and az.
+        """
+        #If not both coordinates are set return 0
+        #Useful to be able to check coordinates after each entry 
+        if 0 in self.valid_target:
+            return 0
+        
+        #Calculate target altitude and azimuth
+        (self.target_alt_float,
+         self.target_az_float,
+         self.target_alt,
+         self.target_az)=equ_to_altaz(self.target_ha_float,self.target_dec_float)
+        
+        
+    
+    def check_target_coordinates(self):
+        """Checks if target coordinates are observable and safe to slew.
+        """
+        #At the moment just a dummy Returning True
+        return True
             
     def slew_to_target(self):
         """Slews to target.
