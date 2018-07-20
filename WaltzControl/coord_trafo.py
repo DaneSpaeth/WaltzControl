@@ -1,4 +1,5 @@
 from math import radians, degrees, sin, cos, tan, asin, atan2
+import numpy as np
 
 def equ_to_altaz(ha,dec):
     """ Transforms equatorial coordinates (hourangle, declination)
@@ -33,6 +34,33 @@ def equ_to_altaz(ha,dec):
     #Convert alt and az to degrees
     alt=degrees(alt)
     az=degrees(az)
+    
+    formated_coord_list=[]
+    #Also Format alt/az to +dd°mm°ss as string
+    #Get the sign of ha_float
+    for coord in [alt,az]:
+        if coord>=0:
+            sign='+'
+        elif coord<0:
+            sign='-'
+        #Calculate the absolute of coord to convert it to hh mm ss
+        coord=abs(coord)
+        #Format hour angle to hh:mm:ss
+        deg=int(coord)
+        rest=abs(coord-deg)*60
+        minutes=int(rest)
+        rest=abs(rest-minutes)*60
+        #We want to round seconds to get a more continous updating of seconds
+        seconds=round(rest)
+        #But we have to take care of rounding up to 60. Increase minutes by one in that case.
+        if seconds==60:
+            seconds=0
+            minutes=minutes+1
+        coord='''{}{:02}°{:02}'{:02}"'''.format(sign,deg,minutes,seconds)
+        formated_coord_list.append(coord)
+        
     #Return altitude and azimuth
-    return (alt,az)
+    return (alt,az,formated_coord_list[0],formated_coord_list[1])
+
+print(equ_to_altaz(-12,0))
     
