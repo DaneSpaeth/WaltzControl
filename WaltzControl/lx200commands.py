@@ -8,7 +8,7 @@ from astropy.time import Time
 
 import communication_commands as com
 from hip_position_func import hip_position
-from coord_trafo import equ_to_altaz
+from coord_operations import equ_to_altaz, check_target_coordinates
 
 class Lx200Commands(com.CommunicationCommands):
     """Inherits from CommunicationCommands and thus from Serial.
@@ -578,21 +578,19 @@ class Lx200Commands(com.CommunicationCommands):
             self.target_az=''
             return False
         
+        #Calculate altitude, azimuth and hour angle of target
         self.calculate_target_alt_az_ha()
         
-        #CHECK COORDINATES HERE#
-        #send target coordinates to serial port
-        self.send_target_coordinates_to_serial()
-        self.valid_target=[self.target_ra,self.target_dec]
-        return True
-        
-        
-    
-    def check_target_coordinates(self):
-        """Checks if target coordinates are observable and safe to slew.
-        """
-        #At the moment just a dummy Returning True
-        return True
+        #Check the coordinates
+        if check_target_coordinates(self.target_alt_float,
+                                    self.target_az_float):
+            #send target coordinates to serial port
+            self.send_target_coordinates_to_serial()
+            self.valid_target=[self.target_ra,self.target_dec]
+            return True
+        else:
+            self.valid_target=[0,0]
+            return False
             
     def slew_to_target(self):
         """Slews to target.

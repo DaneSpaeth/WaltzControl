@@ -62,3 +62,17 @@ def equ_to_altaz(ha,dec):
     #Return altitude and azimuth
     return (alt,az,formated_coord_list[0],formated_coord_list[1])
 
+def check_target_coordinates(alt,az):
+        """Checks if target coordinates are observable and safe to slew.
+        """
+        #Check if target alt and az are set as floats
+        if not alt or not az:
+            return False
+        
+        #Define horizontal limit
+        horizon_limit=12
+        if alt>horizon_limit:
+            return True
+        else:
+            return False
+

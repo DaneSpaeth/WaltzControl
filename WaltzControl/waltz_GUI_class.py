@@ -280,8 +280,8 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_alt_display= Label(self.target_frame,
                                     font=('arial', 15),
-                                    bg='light green',
-                                    width=9)
+                                    bg='red',
+                                    width=10)
         self.target_alt_display.grid(row=1, column=3,pady=10)
         
         self.target_az_label = Label(self.target_frame,
@@ -291,8 +291,8 @@ class WaltzGUI(lx.Lx200Commands):
         
         self.target_az_display= Label(self.target_frame,
                                     font=('arial', 15),
-                                    bg='light green',
-                                    width=9)
+                                    bg='red',
+                                    width=10)
         self.target_az_display.grid(row=2, column=3,pady=10)
         
         self.slew_target_button = Button(self.target_frame,
@@ -637,14 +637,18 @@ class WaltzGUI(lx.Lx200Commands):
         #Call set_target_coordinates
         if not self.set_target_coordinates():
             self.target_alt_display.config(text=self.target_alt)
+            self.target_alt_display.config(bg='red')
             self.target_az_display.config(text=self.target_az)
+            self.target_az_display.config(bg='red')
             self.slew_target_button.config(state='disabled')
             return 0
         else:
             #Display target_alt and az
             self.slew_target_button.config(state='normal')
             self.target_alt_display.config(text=self.target_alt)
+            self.target_alt_display.config(bg='light green')
             self.target_az_display.config(text=self.target_az)
+            self.target_az_display.config(bg='light green')
       
       
     def set_hip_target_from_entry(self, event):
