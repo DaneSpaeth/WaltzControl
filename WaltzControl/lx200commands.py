@@ -31,8 +31,14 @@ class Lx200Commands(com.CommunicationCommands):
         #Store the Target coordinates as strings
         self.target_ra=False
         self.target_dec=False
-        self.target_alt=False
-        self.target_az=False
+        self.target_alt=''
+        self.target_az=''
+        #Store input target_coordinates as list
+        #0. Position meant to portray target_ra input string
+        #1. Pos target_dec_input string
+        #This list will contain the binary input strings that will be sent
+        #to serial port
+        self.target_input=[0,0]
         #Store only valid target_coordinates as list
         #0. Position meant to portray target_ra, 1. target_dec
         self.valid_target=[0,0]
@@ -134,13 +140,10 @@ class Lx200Commands(com.CommunicationCommands):
             return 0
         #Compute the hour angle in range [-12,12]
         self.ha_float=(self.LST_float-self.ra_float)
-        self.target_ha_float=(self.LST_float-self.target_ra_float)
         #hour angles larger than 12 should be converted to negative numbers
         #e.g. 13 to -11
         if self.ha_float>12.:
             self.ha_float=self.ha_float-24.
-        if self.target_ha_float>12.:
-            self.target_ha_float=self.target_ha_float-24.
         #Get the sign of ha_float
         if self.ha_float>=0:
             sign='+'
@@ -161,6 +164,31 @@ class Lx200Commands(com.CommunicationCommands):
             minutes=minutes+1
         self.ha='{}{:02}h{:02}m{:02}s'.format(sign,hours,minutes,seconds)
         
+        
+    def calculate_target_alt_az_ha(self):
+        """ Calculates target alt, az and hour angle.
+        
+            Seperate function to be able to refresh it in gui via after.
+            Because alt, az and ha change with time.
+        """
+        if not self.target_ra or not self.target_dec:
+            return 0
+        try:
+            #Compute the hour angle in range [-12,12]
+            #Right now only as target_ha_float. Formated ha not needed currently.
+            self.target_ha_float=(self.LST_float-self.target_ra_float)
+            if self.target_ha_float>12.:
+                self.target_ha_float=self.target_ha_float-24.
+                
+            #Calculate alt and az
+            #Calculate target altitude and azimuth
+            (self.target_alt_float,
+             self.target_az_float,
+             self.target_alt,
+             self.target_az)=equ_to_altaz(self.target_ha_float,self.target_dec_float)
+        except ValueError:
+            print('Found Error')
+            return 0
         
     def start_move_west(self):
         """ Sends move west LX200 command to serial connection
@@ -305,6 +333,8 @@ class Lx200Commands(com.CommunicationCommands):
      
     def set_target_ra_from_string(self,ra):
         """ Takes string of RA in the format hh mm ss or hh mm.t and sets it as a target.
+        
+            Does not write to serial port.
         """
         #Make sure input is a string
         ra=str(ra)
@@ -313,6 +343,8 @@ class Lx200Commands(com.CommunicationCommands):
         match_obj=re.search( '\d{2}[h\s:]\d{2}[m\s:]\d{2}|\d{2}[h\s:]\d{2}\.\d',ra,re.I)
         if match_obj is None:
             self.target_ra=False
+            self.target_ra_float=False
+            self.target_input[0]=0
             print('Invalid Input! Use Format "hh mm ss" OR "hh mm.t"')
             return 0
         try:
@@ -329,11 +361,13 @@ class Lx200Commands(com.CommunicationCommands):
                 if int(ra_h)>23 or float(ra_m)>=60:
                     print('Numbers too high. Hours not to exceed 23, minutes not to exceed 60')
                     self.target_ra=False
+                    self.target_ra_float=False
+                    self.target_input[0]=0
                     return 0
                 else:
                     #Define input to serial, variable target_ra and target_ra_float
             
-                    inp='#:Sr{}:{}#'.format(ra_h, ra_m)
+                    self.target_input[0]='#:Sr{}:{}#'.format(ra_h, ra_m)
                     self.target_ra='{} {}'.format(ra_h, ra_m)
                     self.target_ra_float=int(ra_h)+float(ra_m)/60.
             #Case 2 hh mm ss (also with units)
@@ -346,52 +380,32 @@ class Lx200Commands(com.CommunicationCommands):
                 if int(ra_h)>23 or int(ra_m)>59 or int(ra_s)>59:
                     print('Numbers too high. Hours not to exceed 23, minutes and seconds not to exceed 60')
                     self.target_ra=False
+                    self.target_ra_float=False
+                    self.target_input[0]=0
                     return 0
                 else:
                     #Define input to serial, variable target_ra and target_ra_float
-                    inp='#:Sr{}:{}:{}#'.format(ra_h, ra_m, ra_s)
+                    self.target_input[0]='#:Sr{}:{}:{}#'.format(ra_h, ra_m, ra_s)
                     self.target_ra='{} {} {}'.format(ra_h, ra_m, ra_s)
                     self.target_ra_float=int(ra_h)+int(ra_m)/60.+int(ra_s)/3600.
             else:
                 print('Invalid Input! Use Format "hh mm ss" OR "hh mm.t"')
                 self.target_ra=False
+                self.target_ra_float=False
+                self.target_input[0]=0
                 return 0
         except ValueError:
             print('Invalid Input! Use Format "hh mm ss" OR "hh mm.t"')
             self.target_ra=False
+            self.target_ra_float=False
+            self.target_input[0]=0
             return 0
-        #Check if the input is observable and write input to serial port if yes
-    
-        ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
-        ### if Koordinaten ok ###
-        
-        inp=inp.encode()
-        self.write(inp)
-        #Set target_ra to valid_target
-        self.valid_target[0]=self.target_ra
-        
-        #Receive 1 if input is valid and 0 if not
-        #Convert to boolean
-        #valid_input=self.get_response()
-        valid_input='1'
-        try:
-            valid_input=bool(int(valid_input[0]))
-        except ValueError:
-            print('Received unexpected response!')
-            return 0
-        if valid_input:
-            print('Target RA set to:',self.target_ra)
-        else:
-            print('Error: Target could not be set!')
-            return 0
-        
-        #We supsect that outputs don't work properly.
-        #So we for now just want to listen what serial port responds.
-        output=self.get_response()
-        print('Response from serial port:',output)
+
             
     def set_target_dec_from_string(self,dec):
         """ Takes string of DEC in the format [+/-]hh mm or [+/-]hh mm ss and sets it as a target.
+        
+            Does not write to serial port.
         """
         #Make sure input is a string
         dec=str(dec)
@@ -401,6 +415,9 @@ class Lx200Commands(com.CommunicationCommands):
         
         if match_obj is None:          
             print('Invalid Input! Use Format "[+/-]dd mm ss" OR "[+/-]dd mm"')
+            self.target_dec=False
+            self.target_dec_float=False
+            self.target_input[1]=0
             return 0
         try:
             #We have two cases. Either dd mm or dd mm ss.
@@ -421,13 +438,15 @@ class Lx200Commands(com.CommunicationCommands):
                 if int(dec_d)>90 or int(dec_d)<-90 or int(dec_m)>59:
                     print('Numbers too high. Degrees not to exceed 90, minutes not to exceed 59')
                     self.target_dec=False
+                    self.target_dec_float=False
+                    self.target_input[1]=0
                     return 0
                 else:
                     ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
                     ### if Koordinaten ok ###
                     
                     #Define input to serial, variable target_dec and target_dec_float
-                    inp='#:Sd{}*{}#'.format(dec_d, dec_m)
+                    self.target_input[1]='#:Sd{}*{}#'.format(dec_d, dec_m)
                     self.target_dec="{} {}".format(dec_d, dec_m)
                     #Take care of right sign
                     if dec_d[0]=='+':
@@ -446,13 +465,13 @@ class Lx200Commands(com.CommunicationCommands):
                 if int(dec_d)>90 or int(dec_d)<-90 or int(dec_m)>59 or int(dec_s)>59:
                     print('Numbers too high. Degrees not to exceed 90, minutes and seconds not to exceed 59')
                     self.target_dec=False
+                    self.target_dec_float=False
+                    self.target_input[1]=0
                     return 0
                 else:
-                    ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
-                    ### if Koordinaten ok ###
                     
                     #Define input to serial, variable target_dec and target_dec_float
-                    inp='#:Sd{}*{}:{}#'.format(dec_d, dec_m, dec_s)
+                    self.target_input[1]='#:Sd{}*{}:{}#'.format(dec_d, dec_m, dec_s)
                     self.target_dec='''{} {} {}'''.format(dec_d, dec_m, dec_s)
                     #Take care of right sign
                     if dec_d[0]=='+':
@@ -465,16 +484,30 @@ class Lx200Commands(com.CommunicationCommands):
                                                int(dec_s)/3600.)
         except ValueError:
             print('Invalid Input! Use Format "[+/-]dd mm ss" OR "[+/-]dd mm"')
+            self.target_dec=False
+            self.target_dec_float=False
+            self.target_input[1]=0
             return 0
-        #Check if the input is observable and write input to serial port if yes
         
-        ### An Dieser Stelle kontrollieren ob Koordinaten ok sind ###
-        ### if Koordinaten ok ###
-        inp=inp.encode()
+
+     
+        
+    def send_target_coordinates_to_serial(self):
+        """ Sends target_coordinates to serial port.
+            
+            Only function that is allowed to send target_coordinates.
+            Will check if both coordinates are set and will only send if True.
+        """
+        #self.target_input contains binary inputs for serial
+        #If one or two coordinates are missing. return 0
+        if 0 in self.target_input:
+            print('Coordinates are not set')
+            return 0
+        
+        #Sending right ascension
+        inp=self.target_input[0].encode()
         self.write(inp)
-        #Set target_dec to valid_target
-        self.valid_target[1]=self.target_dec
-        #Receive '1#' if input is valid and '0#' if not
+        #Receive 1 if input is valid and 0 if not
         #Convert to boolean
         #valid_input=self.get_response()
         valid_input='1'
@@ -484,7 +517,7 @@ class Lx200Commands(com.CommunicationCommands):
             print('Received unexpected response!')
             return 0
         if valid_input:
-            print('Target DEC set to:',self.target_dec)
+            print('Target RA set to:',self.target_ra)
         else:
             print('Error: Target could not be set!')
             return 0
@@ -494,23 +527,64 @@ class Lx200Commands(com.CommunicationCommands):
         output=self.get_response()
         print('Response from serial port:',output)
         
+        #Set target_input entry back to 0
+        self.target_input[0]=0
+        
+        #Sending Declination
+        inp=self.target_input[1].encode()
+        self.write(inp)
+        #Receive 1 if input is valid and 0 if not
+        #Convert to boolean
+        #valid_input=self.get_response()
+        valid_input='1'
+        try:
+            valid_input=bool(int(valid_input[0]))
+        except ValueError:
+            print('Received unexpected response!')
+            return 0
+        if valid_input:
+            print('Target Dec set to:',self.target_ra)
+        else:
+            print('Error: Target could not be set!')
+            return 0
+        
+        #We supsect that outputs don't work properly.
+        #So we for now just want to listen what serial port responds.
+        output=self.get_response()
+        print('Response from serial port:',output)
+        
+        #Set target_input entry back to 0
+        self.target_input[1]=0
+        
+        
     def set_target_coordinates(self):
         """ Sends target coordinates to serial port.
         
-            Only function that may send target_coordinates to serial port.
+            Only function that will call send_target_coordinates_to_serial.
             Will check coordinates before.
             Will also calculate and set target coordinates as alt and az.
+            
+            Receives self.target_input and is the only function that will set
+            self.valid_target. This list will be used to check 
+            to enable slew button.
         """
         #If not both coordinates are set return 0
         #Useful to be able to check coordinates after each entry 
-        if 0 in self.valid_target:
-            return 0
+        if 0 in self.target_input:
+            self.valid_target=[0,0]
+            self.target_alt_float=False
+            self.target_az_float=False
+            self.target_alt=''
+            self.target_az=''
+            return False
         
-        #Calculate target altitude and azimuth
-        (self.target_alt_float,
-         self.target_az_float,
-         self.target_alt,
-         self.target_az)=equ_to_altaz(self.target_ha_float,self.target_dec_float)
+        self.calculate_target_alt_az_ha()
+        
+        #CHECK COORDINATES HERE#
+        #send target coordinates to serial port
+        self.send_target_coordinates_to_serial()
+        self.valid_target=[self.target_ra,self.target_dec]
+        return True
         
         
     

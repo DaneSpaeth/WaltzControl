@@ -360,6 +360,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         #Commands to be executed all the time (if connection is open)
         self.display_coordinates()
+        self.refresh_target_alt_az_ha()
         
         #Check for format of coordinates and toggle automatically
         #We always want format DEC=dd mm ss
@@ -455,6 +456,14 @@ class WaltzGUI(lx.Lx200Commands):
         if not self.connected:
             self._respond_to_connection_state()
         self.master.after(500,self.display_coordinates)
+        
+    def refresh_target_alt_az_ha(self):
+        """ Executes Lx200Commands.calculate_target_alt_az_ha every 500 ms.
+        """
+        super().calculate_target_alt_az_ha()
+        self.target_alt_display.config(text=self.target_alt)
+        self.target_az_display.config(text=self.target_az)
+        self.master.after(500,self.refresh_target_alt_az_ha)
         
     def interchange_west_east(self):
         """Interchanges West and East Buttons.
@@ -620,6 +629,22 @@ class WaltzGUI(lx.Lx200Commands):
         """
         super().secondary_mirror_pos()
         self.wait_for_slew_finish()
+        
+    def set_target_coordinates_gui(self):
+        """ Calls set_target_coordinates() of Lx200Commands.
+            Defines GUIs reaction to target_coordinates.
+        """
+        #Call set_target_coordinates
+        if not self.set_target_coordinates():
+            self.target_alt_display.config(text=self.target_alt)
+            self.target_az_display.config(text=self.target_az)
+            self.slew_target_button.config(state='disabled')
+            return 0
+        else:
+            #Display target_alt and az
+            self.slew_target_button.config(state='normal')
+            self.target_alt_display.config(text=self.target_alt)
+            self.target_az_display.config(text=self.target_az)
       
       
     def set_hip_target_from_entry(self, event):
@@ -633,41 +658,56 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_ra_entry.insert(0, self.target_ra)
         self.target_dec_entry.delete(0, END)
         self.target_dec_entry.insert(0, self.target_dec)
+        self.set_target_coordinates_gui()
         
-        #Check if there are valid coordinates set and enable slew button
-        if 0 not in self.valid_target:
-            self.slew_target_button.config(state='normal')
-            self.sync_button.config(state='normal')
            
     def set_target_ra_from_entry(self, event):
         """ Gets a ra input from the target_ra_entry widget and sets it as target_ra.
             Accepted formats include hh mm ss and hh mm.t.
+            
+            Also tries to set set target dec from entry.
             Clears text of HIP_entry widget.
         """
+        #Delete hip entry
+        self.HIP_entry.delete(0, END)
+        #Get ra input and set as target_ra
         ra_input=self.target_ra_entry.get()
         super().set_target_ra_from_string(ra_input)
         self.target_ra_entry.delete(0, END)
         self.target_ra_entry.insert(0, self.target_ra)
-        self.HIP_entry.delete(0, END)
         
-        #Check if there are valid coordinates set and enable slew button
-        if 0 not in self.valid_target:
-            self.slew_target_button.config(state='normal')
+        #Try to get dec entry also
+        dec_input=self.target_dec_entry.get()
+        #If dec entry is empty do not try to set target_dec
+        if not dec_input=='':
+            super().set_target_dec_from_string(dec_input)
+            self.target_dec_entry.delete(0, END)
+            self.target_dec_entry.insert(0, self.target_dec)
+        
+        self.set_target_coordinates_gui()
         
     def set_target_dec_from_entry(self, event):
         """ Gets a dec input from the target_dec_entry widget and sets it as target_ra.
             Accepted formats include dd mm ss and dd mm.
             Clears text of HIP_entry widget.
         """
+        #Delete hip entry
+        #Get dec input and set as target_dec
+        self.HIP_entry.delete(0, END)
         dec_input=self.target_dec_entry.get()
         super().set_target_dec_from_string(dec_input)
         self.target_dec_entry.delete(0, END)
         self.target_dec_entry.insert(0, self.target_dec)
-        self.HIP_entry.delete(0, END)
         
-        #Check if there are valid coordinates set and enable slew button
-        if 0 not in self.valid_target:
-            self.slew_target_button.config(state='normal')
+        #Try to get ra entry also
+        ra_input=self.target_ra_entry.get()
+        #If ra entry is empty do not try to set target_ra
+        if not ra_input=='':
+            super().set_target_ra_from_string(ra_input)
+            self.target_ra_entry.delete(0, END)
+            self.target_ra_entry.insert(0, self.target_ra)
+        
+        self.set_target_coordinates_gui()
         
     def sync_yes_no(self):
         """Displays yes/no message if sync_button is clicked on.
