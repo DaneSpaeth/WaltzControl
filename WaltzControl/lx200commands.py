@@ -8,7 +8,7 @@ from astropy.time import Time
 
 import communication_commands as com
 from hip_position_func import hip_position
-from coord_operations import equ_to_altaz, check_target_coordinates
+from coord_operations import equ_to_altaz, check_coordinates
 
 class Lx200Commands(com.CommunicationCommands):
     """Inherits from CommunicationCommands and thus from Serial.
@@ -582,7 +582,7 @@ class Lx200Commands(com.CommunicationCommands):
         self.calculate_target_alt_az_ha()
         
         #Check the coordinates
-        if check_target_coordinates(self.target_alt_float,
+        if check_coordinates(self.target_alt_float,
                                     self.target_az_float):
             #send target coordinates to serial port
             self.send_target_coordinates_to_serial()
