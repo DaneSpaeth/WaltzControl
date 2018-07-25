@@ -27,7 +27,7 @@ def equ_to_altaz(ha,dec):
     
     #Calculate altitude and azimuth (formulaes from celestial mechanics script
     #of Genevieve Parmentier)
-    #For altitudewe have the formula:
+    #For altitudwe have the formula:
     #sin(alt)=cos(ha)*cos(lat)*cos(dec)+sin(lat)*sin(dec))
     alt=asin(sin(lat)*sin(dec)+cos(lat)*cos(dec)*cos(ha))
     
@@ -66,6 +66,38 @@ def equ_to_altaz(ha,dec):
     #Return altitude and azimuth
     return (alt,az,formated_coord_list[0],formated_coord_list[1])
 
+def altaz_to_equ(alt,az):
+    """ Transforms horizontal coordinates (azimuth,altitude).
+        to equatorial coordinates (hourangle, declination).
+        
+        Input: alt in degrees as float, az in degrees as float.
+        
+        Returns ha as float in hours and dec as float in degrees.
+    """
+    #Convert alt and az to radians
+    alt=radians(alt)
+    az=radians(az)
+    
+    #Calculate hour angle and declination (formulaes from celestial mechanics script
+    #of Genevieve Parmentier)
+    #For hour angle we have the formula:
+    #tan(ha)=(sin(az))/(cos(lat)*tan(alt)+cos(az)*sin(lat))
+    ha=atan2(sin(az),cos(lat)*tan(alt)+cos(az)*sin(lat))
+    
+    #For declination we have the formula:
+    #sin(dec)=sin(lat)*sin(alt)-cos(lat)*cos(alt)*cos(az)
+    dec=asin(sin(lat)*sin(alt)-cos(lat)*cos(alt)*cos(az))
+    
+    #Convert ha to hours
+    ha=degrees(ha)/15.
+    #Convert dec to degrees
+    dec=degrees(dec)
+    
+    return (ha, dec)
+    
+    
+    
+    
 def check_coordinates(alt,az):
         """Checks if coordinates are observable and safe to slew.
         
