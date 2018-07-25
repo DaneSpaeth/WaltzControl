@@ -68,16 +68,84 @@ def equ_to_altaz(ha,dec):
 
 def check_coordinates(alt,az):
         """Checks if coordinates are observable and safe to slew.
+        
+           Returns True if coordinates do not reach limits.
+           Returns False if coordinates are in limits.
         """
         #Check if alt and az are set as floats
         if not alt or not az:
             return False
         
+        #Check cupboard_limits: Return False if within Cupboard limits
+        if not check_cupboard_limits(alt,az):
+            return False
+            
         #Check if altitude is above or below horizontal limit
         if alt>horizon_limit:
             return True
         else:
             return False
+        
+def check_cupboard_limits(alt,az):
+    """Checks if coordinates reach the cupboard limits.
+       
+       Returns True if coordinates do not reach limits.
+       Returns False if coordinates are in limits.
+       
+       Only useful for Configuration of Waltz Telescope in July 2018.
+       Will only be used in check_coordinates.
+    """
+    #Only the region in azimuth between 97° and 150° has to be checked
+    #If az is outside this region, cuboard limits are ok
+    
+    if not 97.0 < az < 150.0:
+        return True
+    
+    #Define cupboard limits as np array
+    #First and last limits are artificial horizontal limits
+    #Up to these values the cupboard limits will act
+    #Range from az=97° to 150°
+    board_lim=np.array([[12.0, 97.0],
+                       [18.047683650516614, 101.22273624588037],
+                       [19.922540694112776, 108.09973819537765],
+                       [19.92473999691732, 112.96653118269231],
+                       [18.1891109125214, 115.94832778139686],
+                       [17.26156820756814, 119.6115621873876],
+                       [17.3079984461787, 124.02768286442313],
+                       [17.61337050520085, 128.47376745531645],
+                       [16.514643086444128, 131.5063030183839],
+                       [17.105176559235456, 135.7850030762675],
+                       [15.574353529644203, 138.2131928476609],
+                       [15.367408374687445, 141.5357258928432],
+                       [13.465127305224598, 143.60311637027976],
+                       [12.635376162837199,146.34084417895636],
+                       [12.0, 150.0]])
+    
+    #We want to find the two defined limits nearest to given az
+    #Then we want to take the highest limit of the two
+
+    #Compute difference between limit azs an given az
+    diff=board_lim[:,1]-az
+    #Take only positive and negative differences
+    pos=diff[diff>=0]
+    neg=diff[diff<0]
+    #Find one limit at lowest positive value of difference in az
+    up_az_lim=board_lim[np.where(diff==np.amin(pos))][0]
+    #The other at greatest negative value
+    low_az_lim=board_lim[np.where(diff==np.amax(neg))][0]
+
+    #Take only altitude entries
+    up_alt_lim=up_az_lim[0]
+    low_alt_lim=low_az_lim[0]
+
+    #Get Maximum of the two altitude limits
+    alt_limit=max(up_alt_lim,low_alt_lim)
+    
+    #Check if altitude is below or above limit
+    if alt >= alt_limit:
+        return True
+    else:
+        return False
         
 def calc_obs_time(ha,dec):
     """Calculates timespan, one can still observe star until it reaches 
@@ -111,6 +179,7 @@ def calc_obs_time(ha,dec):
             return ha_set
         except ValueError:
             return False
+    
     #Check if coordinates are within limits
     if not check_coordinates(alt,az):
         message = "Currently unobservable"
@@ -126,7 +195,4 @@ def calc_obs_time(ha,dec):
             #Convert to solar time units
             return obs_time
 
-        
-        
-    
-print(calc_obs_time(0.5,52.5))
+
