@@ -76,30 +76,27 @@ def check_coordinates(alt,az):
         if not alt or not az:
             return False
         
-        #Check cupboard_limits: Return False if within Cupboard limits
-        if not check_cupboard_limits(alt,az):
-            return False
+        #Calculate altitude limit
+        alt_limit=calc_alt_limit(az)
             
         #Check if altitude is above or below horizontal limit
-        if alt>horizon_limit:
+        if alt>=alt_limit:
             return True
         else:
             return False
         
-def check_cupboard_limits(alt,az):
-    """Checks if coordinates reach the cupboard limits.
-       
-       Returns True if coordinates do not reach limits.
-       Returns False if coordinates are in limits.
-       
-       Only useful for Configuration of Waltz Telescope in July 2018.
-       Will only be used in check_coordinates.
-    """
-    #Only the region in azimuth between 97° and 150° has to be checked
-    #If az is outside this region, cuboard limits are ok
     
+def calc_alt_limit(az):
+    """ Calculates altitude limits.
+    
+        Returns Altitude limit in degrees.
+    """
+    #Return horizon limit outside of cupboard region
     if not 97.0 < az < 150.0:
-        return True
+        alt_limit=horizon_limit
+        return alt_limit
+    
+    #Cupboard Limits
     
     #Define cupboard limits as np array
     #First and last limits are artificial horizontal limits
@@ -141,11 +138,8 @@ def check_cupboard_limits(alt,az):
     #Get Maximum of the two altitude limits
     alt_limit=max(up_alt_lim,low_alt_lim)
     
-    #Check if altitude is below or above limit
-    if alt >= alt_limit:
-        return True
-    else:
-        return False
+    return alt_limit
+    
         
 def calc_obs_time(ha,dec):
     """Calculates timespan, one can still observe star until it reaches 
