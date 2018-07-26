@@ -17,27 +17,29 @@ for index in range(len(az)):
 plt.plot(az,alt_limit,color='red')
 plt.plot(az,tree_limit,color='#00cc00',linewidth=0.0)
 plt.fill_between(az,alt_limit,np.zeros(len(az)),color='red',alpha=1)
-plt.fill_between(az,tree_limit,alt_limit,color='#00cc00',where=tree_limit>alt_limit,alpha=1)
+plt.fill_between(az,tree_limit,alt_limit,color='#00cc00',
+                 where=tree_limit>alt_limit,alpha=1)
 plt.axis([-180, 180, 0, 90])
 plt.xlabel('Azimuth[°]')
 plt.ylabel('Altitude[°]')
 plt.title('Waltz Pointing Limits')
 
 #Define star (later function input)
-star_az=-120
-star_alt=35
+star_az=120
+star_alt=40
 
 #Calculate star ha and dec
 star_ha,star_dec=altaz_to_equ(star_alt,star_az)
 #Define star trajectory (dec stays constant, hour angle increases)
-traj_ha=np.arange(star_ha,12,0.05)
+traj_ha=np.arange(-11.999,11.999,0.05)
 traj_dec=np.ones(len(traj_ha))*star_dec
 #Calculate star trajectory in alt and az
 traj_alt=np.zeros(len(traj_ha))
 traj_az=np.zeros(len(traj_ha))
 
 for index in range(len(traj_ha)):
-    traj_alt[index],traj_az[index],_,__=equ_to_altaz(traj_ha[index],traj_dec[index])
+    traj_alt[index],traj_az[index],_,__=equ_to_altaz(traj_ha[index],
+                                                     traj_dec[index])
     
 
 #plot star
@@ -52,19 +54,20 @@ ha=np.zeros(len(az))
 #And tree limit array
 dec_tree_limit=np.zeros(len(az))
 ha_tree_limit=np.zeros(len(az))
-dec_zero_alt=np.zeros(len(az))
 #Transform altaz limits to ha,dec limits
 for index in range(len(az)):
     ha[index],dec_limit[index]=altaz_to_equ(alt_limit[index],az[index])
-    ha_tree_limit[index],dec_tree_limit[index]=altaz_to_equ(tree_limit[index],az[index])
-    __,dec_zero_alt[index]=altaz_to_equ(0,az[index])
+    ha_tree_limit[index],dec_tree_limit[index]=altaz_to_equ(tree_limit[index],
+                                                            az[index])
     
-#Plot alt_limits vs az    
+#Plot dec_limits vs ha    
 plt.plot(ha_tree_limit,dec_tree_limit,color='#00cc00',linewidth=0.0)
 plt.plot(ha,dec_limit,color='red')
 y_plot_limit=-30
 
-plt.fill_between(ha_tree_limit,dec_tree_limit,np.ones(len(ha))*y_plot_limit,interpolate=True,color='#00cc00',where=dec_tree_limit>dec_limit,alpha=1)
+plt.fill_between(ha_tree_limit,dec_tree_limit,np.ones(len(ha))*y_plot_limit,
+                 interpolate=True,color='#00cc00',
+                 where=dec_tree_limit>dec_limit,alpha=1)
 plt.fill_between(ha,dec_limit,np.ones(len(ha))*y_plot_limit,color='red',alpha=1)
 plt.axis([-12, 12, y_plot_limit, 90])
 plt.xlabel('Hour Angle[h]')
@@ -74,7 +77,39 @@ plt.title('Waltz Pointing Limits')
 #plot star
 plt.plot(star_ha,star_dec,'b*')
 plt.plot(traj_ha,traj_dec,'b:')
-plt.show()  
+plt.show()
+
+#Approximately calculate time until hard limit is reached
+#If Star is circumpolar obs_time is 24 hours
+if star_dec > np.amax(dec_limit):
+    sid_obs_time=24.
+    obs_time=24.
+else:
+    #If not circumpolar
+    #Calculate the absolute differences between those dec_limits 
+    #that are at hour angles larger than the stars hour angle
+    #(to prevent to get the intersection on the eastern side)
+    #and the stars declination
+    dec_diff=np.abs(dec_limit[ha>star_ha]-star_dec)
+    #Also cut out the hour angle values on the eastern side in ha array
+    #Needed to get same dimension
+    #Otherwise argmin wouldn't work
+    ha_later=ha[ha>star_ha]
+    #Hour Anlge at setting (reaching red limit) is at the same index as the
+    #minimum of dec_diff
+    ha_set=ha_later[np.argmin(dec_diff)]
+    #Calculate the sidereal time until the star sets
+    sid_obs_time=ha_set-star_ha
+    #Sidereal hours convert to solar hours (normal time)
+    #via 1h_sid=0.9972695601852h_sol
+    obs_time=sid_obs_time*0.9972695601852
+    
+print(obs_time)
+print(sid_obs_time)
+print(obs_time-sid_obs_time)
+    
+    
+
 
 
 
