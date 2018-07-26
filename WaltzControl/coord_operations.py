@@ -177,14 +177,12 @@ def calc_obs_time(ha,dec):
     """Calculates timespan, one can still observe star until it reaches 
        horizon limit.
     """
+    
     #First calculate altitude and azimuth
     alt,az=equ_to_altaz(ha,dec)[:2]
-    print(alt)
-    print(az)
         
     #Save current hour angle in hours
     ha_now=ha
-    print(ha_now)
     #Convert hour angle to radians
     ha=radians(ha*15.)
     
@@ -219,6 +217,7 @@ def calc_obs_time(ha,dec):
             #Calculate observing time (in sidereal hours)
             obs_time=ha_set-ha_now
             #Convert to solar time units
+            obs_time=obs_time*0.9972695601852
             return obs_time
         
 def calc_tree_limit(az):
@@ -310,6 +309,7 @@ def calc_tree_limit(az):
     alt_limit=max(up_alt_lim,low_alt_lim)
     
     return alt_limit
+
 
     
        

@@ -25,11 +25,15 @@ plt.ylabel('Altitude[°]')
 plt.title('Waltz Pointing Limits')
 
 #Define star (later function input)
-star_az=120
-star_alt=40
-
+#star_az=120
+#star_alt=40
+star_ha=-3.5
+star_dec=10.0
 #Calculate star ha and dec
-star_ha,star_dec=altaz_to_equ(star_alt,star_az)
+#star_ha,star_dec=altaz_to_equ(star_alt,star_az)
+
+#Calculate star_az and star_alt
+star_alt,star_az,_,__=equ_to_altaz(star_ha,star_dec)
 #Define star trajectory (dec stays constant, hour angle increases)
 traj_ha=np.arange(-11.999,11.999,0.05)
 traj_dec=np.ones(len(traj_ha))*star_dec
