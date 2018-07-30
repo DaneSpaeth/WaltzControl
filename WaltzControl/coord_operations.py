@@ -216,8 +216,8 @@ def calc_obs_time(ha,dec):
         else:
             #Calculate observing time (in sidereal hours)
             obs_time=ha_set-ha_now
-            #Convert to solar time units
-            obs_time=obs_time*0.9972695601852
+            #Convert to solar time units (in seconds)
+            obs_time=obs_time*0.9972695601852*3600
             return obs_time
         
 def calc_tree_limit(az):
@@ -309,6 +309,8 @@ def calc_tree_limit(az):
     alt_limit=max(up_alt_lim,low_alt_lim)
     
     return alt_limit
+
+
 
 
     
