@@ -15,32 +15,44 @@ def equ_to_altaz(ha,dec):
         
         Returns altitude and azimuth as float in degrees.
     """
+    #Check if Input arrays have same dimensions
+    if not np.isscalar(ha) and not np.isscalar(dec):
+        if (len(ha)!=len(dec) or ha.ndim!=1 or dec.ndim!=1):
+            return 0
+    
     #Convert hour angle to radians
     #Convert hour angle to degree first and convert negative hour angles to
     #positive ones (e.g. -11 to 13)
-    if ha < 0:
-        ha=ha+24
-    ha=radians(ha*15.)
+    ha=ha+24*(ha<0)
+    ha=np.radians(ha*15.)
     
     #Convert declination to radians
-    dec=radians(dec)
+    dec=np.radians(dec)
     
     #Calculate altitude and azimuth (formulaes from celestial mechanics script
     #of Genevieve Parmentier)
     #For altitudwe have the formula:
     #sin(alt)=cos(ha)*cos(lat)*cos(dec)+sin(lat)*sin(dec))
-    alt=asin(sin(lat)*sin(dec)+cos(lat)*cos(dec)*cos(ha))
+    alt=np.arcsin(np.sin(lat)*np.sin(dec)+np.cos(lat)*np.cos(dec)*np.cos(ha))
     
     #For azimuth we have the formula
     #tan(az)=-sin(ha)/(cos(lat)*tan(dec)-sin(lat)*cos(ha))
-    az=atan2(sin(ha),(-cos(lat)*tan(dec)+sin(lat)*cos(ha)))
+    az=np.arctan2(np.sin(ha),(-np.cos(lat)*np.tan(dec)+np.sin(lat)*np.cos(ha)))
     
     #Convert alt and az to degrees
-    alt=degrees(alt)
-    az=degrees(az)
+    alt=np.degrees(alt)
+    az=np.degrees(az)
     
+    #If Input was an array longer than 1 return the float arrays
+    if not np.isscalar(alt):
+        return (alt,az)
+    
+    #If Input was single values than also format the Output
+    #In that case transform arrays to float
+    alt=float(alt)
+    az=float(az)
     formated_coord_list=[]
-    #Also Format alt/az to +dd°mm°ss as string
+    #Also Format alt/az to +dd°mm'ss" as string
     #Get the sign of ha_float
     for coord in [alt,az]:
         if coord>=0:
@@ -70,28 +82,29 @@ def altaz_to_equ(alt,az):
     """ Transforms horizontal coordinates (azimuth,altitude).
         to equatorial coordinates (hourangle, declination).
         
-        Input: alt in degrees as float, az in degrees as float.
+        Input: alt in degrees as float or array of floats, 
+               az in degrees as float or array of floats.
         
         Returns ha as float in hours and dec as float in degrees.
     """
     #Convert alt and az to radians
-    alt=radians(alt)
-    az=radians(az)
+    alt=np.radians(alt)
+    az=np.radians(az)
     
     #Calculate hour angle and declination (formulaes from celestial mechanics script
     #of Genevieve Parmentier)
     #For hour angle we have the formula:
     #tan(ha)=(sin(az))/(cos(lat)*tan(alt)+cos(az)*sin(lat))
-    ha=atan2(sin(az),cos(lat)*tan(alt)+cos(az)*sin(lat))
+    ha=np.arctan2(np.sin(az),np.cos(lat)*np.tan(alt)+np.cos(az)*np.sin(lat))
     
     #For declination we have the formula:
     #sin(dec)=sin(lat)*sin(alt)-cos(lat)*cos(alt)*cos(az)
-    dec=asin(sin(lat)*sin(alt)-cos(lat)*cos(alt)*cos(az))
+    dec=np.arcsin(np.sin(lat)*np.sin(alt)-np.cos(lat)*np.cos(alt)*np.cos(az))
     
     #Convert ha to hours
-    ha=degrees(ha)/15.
+    ha=np.degrees(ha)/15.
     #Convert dec to degrees
-    dec=degrees(dec)
+    dec=np.degrees(dec)
     
     return (ha, dec)
     
@@ -310,8 +323,7 @@ def calc_tree_limit(az):
     
     return alt_limit
 
-
-
+print(equ_to_altaz(3,30))
 
     
        
