@@ -1,80 +1,62 @@
 import numpy as np
 import math
 lat=math.radians(49.3978620896919)
+horizon_limit=12
 
-def equ_to_altaz(ha,dec):
-    """ Transforms equatorial coordinates (hourangle, declination)
-        to horizontal coordinates (azimuth,altitude).
-        
-        Input: ha in hours as float, dec in degree as float.
-        
-        Returns altitude and azimuth as float in degrees.
+def calc_alt_limit(az):
+    """ Calculates altitude limits.
+    
+        Returns Altitude limit in degrees.
     """
-    #Check if Input arrays have same dimensions
-    if not np.isscalar(ha) and not np.isscalar(dec):
-        if (len(ha)!=len(dec) or ha.ndim!=1 or dec.ndim!=1):
-            return 0
+    #Return horizon limit outside of cupboard region
+    #if not 97.0 < az < 150.0:
+    #    alt_limit=horizon_limit
+    #    return alt_limit
+    alt_limit=horizon_limit*((az < 90)+(az>150))
+    #Cupboard Limits
+    #Define cupboard limits as np array
+    #First and last limits are artificial horizontal limits
+    #Up to these values the cupboard limits will act
+    #Range from az=97° to 150°
+    board_lim=np.array([[12.0, 97.0],
+                       [18.047683650516614, 101.22273624588037],
+                       [19.922540694112776, 108.09973819537765],
+                       [19.92473999691732, 112.96653118269231],
+                       [18.1891109125214, 115.94832778139686],
+                       [17.26156820756814, 119.6115621873876],
+                       [17.3079984461787, 124.02768286442313],
+                       [17.61337050520085, 128.47376745531645],
+                       [16.514643086444128, 131.5063030183839],
+                       [17.105176559235456, 135.7850030762675],
+                       [15.574353529644203, 138.2131928476609],
+                       [15.367408374687445, 141.5357258928432],
+                       [13.465127305224598, 143.60311637027976],
+                       [12.635376162837199,146.34084417895636],
+                       [12.0, 150.0]])
     
-    #Convert hour angle to radians
-    #Convert hour angle to degree first and convert negative hour angles to
-    #positive ones (e.g. -11 to 13)
-    ha=ha+24*(ha<0)
-    ha=np.radians(ha*15.)
-    
-    #Convert declination to radians
-    dec=np.radians(dec)
-    
-    #Calculate altitude and azimuth (formulaes from celestial mechanics script
-    #of Genevieve Parmentier)
-    #For altitudwe have the formula:
-    #sin(alt)=cos(ha)*cos(lat)*cos(dec)+sin(lat)*sin(dec))
-    alt=np.arcsin(np.sin(lat)*np.sin(dec)+np.cos(lat)*np.cos(dec)*np.cos(ha))
-    
-    #For azimuth we have the formula
-    #tan(az)=-sin(ha)/(cos(lat)*tan(dec)-sin(lat)*cos(ha))
-    az=np.arctan2(np.sin(ha),(-np.cos(lat)*np.tan(dec)+np.sin(lat)*np.cos(ha)))
-    
-    #Convert alt and az to degrees
-    alt=np.degrees(alt)
-    az=np.degrees(az)
-    
-    #If Input was an array longer than 1 return the float arrays
-    if not np.isscalar(alt):
-        return (alt,az)
-    
-    #If Input was single values than also format the Output
-    #In that case transform arrays to float
-    alt=float(alt)
-    az=float(az)
-    formated_coord_list=[]
-    #Also Format alt/az to +dd°mm'ss" as string
-    #Get the sign of ha_float
-    for coord in [alt,az]:
-        if coord>=0:
-            sign='+'
-        elif coord<0:
-            sign='-'
-        #Calculate the absolute of coord to convert it to hh mm ss
-        coord=abs(coord)
-        #Format hour angle to hh:mm:ss
-        deg=int(coord)
-        rest=abs(coord-deg)*60
-        minutes=int(rest)
-        rest=abs(rest-minutes)*60
-        #We want to round seconds to get a more continous updating of seconds
-        seconds=round(rest)
-        #But we have to take care of rounding up to 60. Increase minutes by one in that case.
-        if seconds==60:
-            seconds=0
-            minutes=minutes+1
-        coord='''{}{:02}°{:02}'{:02}"'''.format(sign,deg,minutes,seconds)
-        formated_coord_list.append(coord)
-        
-    #Return altitude and azimuth
-    return (alt,az,formated_coord_list[0],formated_coord_list[1])
+    #We want to find the two defined limits nearest to given az
+    #Then we want to take the highest limit of the two
 
-#print(equ_to_altaz(np.array([3,4]),np.array([30,40])))
-print(equ_to_altaz(3,40))
-#a=np.array([1.12345])
-#print(type(a))
-#print(np.isscalar(a))
+    #Compute difference between limit azs an given az
+    diff=np.subtract(board_lim[:,1],az)
+    #Take only positive and negative differences
+    pos=diff[diff>=0]
+    neg=diff[diff<0]
+    #Find one limit at lowest positive value of difference in az
+    up_az_lim=board_lim[np.where(diff==np.amin(pos))][0]
+    #The other at greatest negative value
+    low_az_lim=board_lim[np.where(diff==np.amax(neg))][0]
+
+    #Take only altitude entries
+    up_alt_lim=up_az_lim[0]
+    low_alt_lim=low_az_lim[0]
+
+    #Get Maximum of the two altitude limits
+    alt_limit=np.maximum(up_alt_lim,low_alt_lim)
+    
+    return alt_limit
+
+
+az=np.array([30,60,90,120,145,180,210,240,280])
+
+print(calc_alt_limit(az))
