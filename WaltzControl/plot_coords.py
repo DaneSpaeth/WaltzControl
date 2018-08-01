@@ -121,8 +121,7 @@ def approx_obs_time(star_ha,star_dec):
     ha=np.zeros(len(az))
     
     #Calculate alt_limit for every az 
-    for index in range(len(az)):
-        alt_limit[index]=calc_alt_limit(az[index])
+    alt_limit=calc_alt_limit(az)
 
     #Transform altaz limits to ha,dec limits
     ha,dec_limit=altaz_to_equ(alt_limit,az)

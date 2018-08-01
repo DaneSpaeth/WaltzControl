@@ -279,9 +279,13 @@ def calc_tree_limit(az):
     #Define Tree limits as np.array
     #I put zero alt limit, where horizontal or cupboard limit is reached,
     #because we do not care about tree limits below hard limits.
-    #Does not include all cupboard or horzontal areas, because it is zero there anyway
-    if not -180<=az<=180:
-        return False
+    #Does not include all cupboard or horizontal areas, because it is zero there anyway
+    
+    #Check Input: If int or float make array
+    if isinstance(az,(float,int)):
+        az=np.array([az])
+    elif isinstance(az,list):
+        az=np.array(az)
     
     tree_lim=np.array([[0.0,-180.01],
                        [0.0,-165.3455807696162],
@@ -337,31 +341,63 @@ def calc_tree_limit(az):
                        [0.0,146.34084417895636],
                        [0.0,180.01]])
     
-    #We want to find the two defined limits nearest to given az
-    #Then we want to take the highest limit of the two
+    #Create multidimensional arrays of same shape
+    #Idea is to have all differences of one given az in one line
+    #So we want a board_lim_matrix where in each line all azimuths of
+    #the board limits are represented. So it has as many lines as given azs
+    #and in each line all limit_az are repeated
+    az_lim_matrix=np.array(np.tile(tree_lim[:,1],az.shape[0]))
+    az_lim_matrix=az_lim_matrix.reshape(az.shape[0],tree_lim.shape[0])
 
-    #Compute difference between limit azs an given az
-    diff=tree_lim[:,1]-az
-    #Take only positive and negative differences
-    pos=diff[diff>=0]
-    neg=diff[diff<0]
-    #print(diff)
+    #The az_matrix is constructed so that in each line only one value of 
+    #input az is written
+    #It has as many columns as azimuth limits 
+    az_matrix=np.array(np.repeat(az,tree_lim.shape[0]))
+    az_matrix=az_matrix.reshape(az.shape[0],tree_lim.shape[0])
+
+    #Calculate difference matrix
+    diff=az_lim_matrix-az_matrix
+
+    #Calculate matrices with only positive and negative values respectively
+    pos=(diff>=0)*diff
+    neg=(diff<0)*diff
+
+    #insert +/- infinity for 0, to avoid finding maxima/minima there 
+    pos[pos==0]=np.inf
+    neg[neg==0]=-np.inf
+
     #Find one limit at lowest positive value of difference in az
-    up_az_lim=tree_lim[np.where(diff==np.amin(pos))][0]
     #The other at greatest negative value
-    low_az_lim=tree_lim[np.where(diff==np.amax(neg))][0]
+    up_az_lim=az_lim_matrix[np.where(diff==np.amin(pos,axis=1,keepdims=True))]
+    low_az_lim=az_lim_matrix[np.where(diff==np.amax(neg,axis=1,keepdims=True))]
 
-    #Take only altitude entries
-    up_alt_lim=up_az_lim[0]
-    low_alt_lim=low_az_lim[0]
+    #Define 1D array with az_limits from limits
+    az_lim=tree_lim[:,1]
+    #Get indices of sorted array. Note that it normally should be sorted already.
+    #But it is useful if one would insert new limits in unsorted order.
+    #Note that array is not really sorted, so we do not lose indices.
+    #We only get the indices with which you could sort the array
+    az_lim_sorted = np.argsort(az_lim)
 
-    #Get Maximum of the two altitude limits
-    #Maybe Minimum would be better for tree limits
-    alt_limit=max(up_alt_lim,low_alt_lim)
+    #Perform searchsort with sorted indices. Search for up_az_lim values
+    #in general az_limits
+    up_pos = np.searchsorted(az_lim[az_lim_sorted], up_az_lim)
+    #get the indices, where you found the up_az_limits
+    up_indices = az_lim_sorted[up_pos]
+    #And take the up_alt_lim at these indices
+    up_alt_lim=tree_lim[up_indices,0]
+
+    #Analog for low_alt_lim
+    low_pos = np.searchsorted(az_lim[az_lim_sorted], low_az_lim)
+    low_indices = az_lim_sorted[low_pos]
+    low_alt_lim=tree_lim[low_indices,0]
+
+    #Take the maximum element wise. So we always want the largest limit
+    #of the two limit borders.
+    tree_lim=np.maximum(up_alt_lim,low_alt_lim)
     
-    return alt_limit
-
-
+    return tree_lim
+    
 
     
        
