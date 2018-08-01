@@ -10,10 +10,9 @@ def plot_traj_and_limits(star_ha,star_dec):
     alt_limit=np.zeros(len(az))
     tree_limit=np.zeros(len(az))
 
-    #Calculate alt_limit and tree_limit for every az 
-    for index in range(len(az)):
-        alt_limit[index]=calc_alt_limit(az[index])
-        tree_limit[index]=calc_tree_limit(az[index])
+
+    alt_limit=calc_alt_limit(az)
+    tree_limit=calc_tree_limit(az)
 
     #Plot alt_limits vs az and tree limits  
     plt.plot(az,alt_limit,color='red')
@@ -28,6 +27,8 @@ def plot_traj_and_limits(star_ha,star_dec):
 
     #Calculate star_az and star_alt
     star_alt,star_az,_,__=equ_to_altaz(star_ha,star_dec)
+    print(star_alt)
+    print(star_az)
     #Define star trajectory (dec stays constant, hour angle increases)
     traj_ha=np.arange(-11.999,11.999,0.05)
     traj_dec=np.ones(len(traj_ha))*star_dec
@@ -35,14 +36,13 @@ def plot_traj_and_limits(star_ha,star_dec):
     traj_alt=np.zeros(len(traj_ha))
     traj_az=np.zeros(len(traj_ha))
 
-    for index in range(len(traj_ha)):
-        traj_alt[index],traj_az[index],_,__=equ_to_altaz(traj_ha[index],
-                                                         traj_dec[index])
+
+    traj_alt,traj_az=equ_to_altaz(traj_ha,traj_dec)
     
 
     #plot star
     plt.plot(star_az,star_alt,'b*')
-    plt.plot(traj_az,traj_alt,'b:')
+    plt.plot(traj_az,traj_alt,'b.',markersize=0.5)
     plt.show()
 
     #Define dec_limits and hour angle arrays
@@ -53,10 +53,8 @@ def plot_traj_and_limits(star_ha,star_dec):
     dec_tree_limit=np.zeros(len(az))
     ha_tree_limit=np.zeros(len(az))
     #Transform altaz limits to ha,dec limits
-    for index in range(len(az)):
-        ha[index],dec_limit[index]=altaz_to_equ(alt_limit[index],az[index])
-        ha_tree_limit[index],dec_tree_limit[index]=altaz_to_equ(tree_limit[index],
-                                                                az[index])
+    ha,dec_limit=altaz_to_equ(alt_limit,az)
+    ha_tree_limit,dec_tree_limit=altaz_to_equ(tree_limit,az)
     
     #Plot dec_limits vs ha    
     plt.plot(ha_tree_limit,dec_tree_limit,color='#00cc00',linewidth=0.0)
@@ -74,7 +72,7 @@ def plot_traj_and_limits(star_ha,star_dec):
 
     #plot star
     plt.plot(star_ha,star_dec,'b*')
-    plt.plot(traj_ha,traj_dec,'b:')
+    plt.plot(traj_ha,traj_dec,'b.',markersize=0.5)
     plt.show()
 
     #Approximately calculate time until hard limit is reached
@@ -161,7 +159,7 @@ def approx_obs_time(star_ha,star_dec):
     print(round(tend-tstart, 3))
     return obs_time
 
-approx_obs_time(3.,30.)
+plot_traj_and_limits(-3,-15)
 
 
 
