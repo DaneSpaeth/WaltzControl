@@ -169,17 +169,21 @@ def plot_traj_limits_altaz_GUI(star_ha,star_dec,current_ha,current_dec):
     #Plot
     fig = plt.figure(figsize=(13,6))
     ax1 = fig.add_subplot(111)
+    return_list=[fig]
 
     
     #Plot alt_limit,tree_limits and star position and trajectory
     ax1.plot(az,alt_limit,color='red')
     ax1.plot(az,tree_limit,color='#00cc00',linewidth=0.0)
     if star_ha and star_dec:
-        ax1.plot(star_az,star_alt,'b*')
-        ax1.plot(traj_az,traj_alt,'b.',markersize=0.75)
+        star_plot=ax1.plot(star_az,star_alt,'b*')
+        traj_plot=ax1.plot(traj_az,traj_alt,'b.',markersize=0.75)
+        return_list.append(star_plot)
+        return_list.append(traj_plot)
     if current_ha and current_dec:
         current_alt,current_az,_,__=equ_to_altaz(current_ha,current_dec)
-        ax1.plot(current_az,current_alt,color='black',marker='o')
+        pos_plot=ax1.plot(current_az,current_alt,color='black',marker='o')
+        return_list.append(pos_plot)
     #Fill the colors between the limits and 0 altitude
     ax1.fill_between(az,alt_limit,np.zeros(len(az)),color='red',alpha=1)
     ax1.fill_between(az,tree_limit,alt_limit,color='#00cc00',
@@ -199,7 +203,8 @@ def plot_traj_limits_altaz_GUI(star_ha,star_dec,current_ha,current_dec):
         ax2.set_xticks(traj_ticks_az)
         ax2.set_xticklabels(traj_ticks_ha)
         ax2.set_xlabel("Hour angle [h]")
-    return fig
+        return_list.append(ax2)
+    return return_list
     
 
     
