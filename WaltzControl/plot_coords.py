@@ -75,32 +75,6 @@ def plot_traj_and_limits(star_ha,star_dec):
     plt.plot(traj_ha,traj_dec,'b.',markersize=0.5)
     plt.show()
 
-    #Approximately calculate time until hard limit is reached
-    #If Star is circumpolar obs_time is 24 hours
-    if star_dec > np.amax(dec_limit):
-        sid_obs_time=24.
-        obs_time=24.
-    else:
-        #If not circumpolar
-        #Calculate the absolute differences between those dec_limits 
-        #that are at hour angles larger than the stars hour angle
-        #(to prevent to get the intersection on the eastern side)
-        #and the stars declination
-        dec_diff=np.abs(dec_limit[ha>star_ha]-star_dec)
-        #Also cut out the hour angle values on the eastern side in ha array
-        #Needed to get same dimension
-        #Otherwise argmin wouldn't work
-        ha_later=ha[ha>star_ha]
-        #Hour Anlge at setting (reaching red limit) is at the same index as the
-        #minimum of dec_diff
-        ha_set=ha_later[np.argmin(dec_diff)]
-        #Calculate the sidereal time until the star sets
-        sid_obs_time=ha_set-star_ha
-        #Sidereal hours convert to solar hours (normal time)
-        #via 1h_sid=0.9972695601852h_sol
-        obs_time=sid_obs_time*0.9972695601852
-    return obs_time
-
 def approx_obs_time(star_ha,star_dec):
     """Calculates an approximate observing time for a star.
        
@@ -159,7 +133,70 @@ def approx_obs_time(star_ha,star_dec):
     print(round(tend-tstart, 3))
     return obs_time
 
-plot_traj_and_limits(-3,-15)
+def plot_traj_limits_altaz(star_ha,star_dec):
+    """Plots limits and star trajectory in altitude and azimuth.
+    """
+    #Create az and alt_limit and tree_limit array
+    az=np.arange(-180,180,0.01)
+    alt_limit=np.zeros(len(az))
+    tree_limit=np.zeros(len(az))
+
+    #Calculate limits
+    alt_limit=calc_alt_limit(az)
+    tree_limit=calc_tree_limit(az)
+    
+    #Calculate star_az and star_alt
+    star_alt,star_az,_,__=equ_to_altaz(star_ha,star_dec)
+    #Define star trajectory (dec stays constant, hour angle increases)
+    traj_ha=np.arange(-11.999,11.999,0.05)
+    traj_dec=np.ones(len(traj_ha))*star_dec
+    #Calculate star trajectory in alt and az
+    traj_alt=np.zeros(len(traj_ha))
+    traj_az=np.zeros(len(traj_ha))
+    traj_alt,traj_az=equ_to_altaz(traj_ha,traj_dec)
+    
+    #Create array, where to put the hour angle ticks
+    traj_ticks_ha=np.arange(np.round(star_ha),12)
+    traj_ticks_dec=np.ones(len(traj_ticks_ha))*star_dec
+    #Calculate the corresponding azimuth ticks
+    __,traj_ticks_az=equ_to_altaz(traj_ticks_ha,traj_ticks_dec)
+    #Tranform to integers for style
+    traj_ticks_ha=traj_ticks_ha.astype(int)
+    
+    #Plot
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    #Add second axis to get x_labels at upper x-axis
+    ax2 = ax1.twiny()
+    
+    #Plot alt_limit,tree_limits and star position and trajectory
+    ax1.plot(az,alt_limit,color='red')
+    ax1.plot(az,tree_limit,color='#00cc00',linewidth=0.0)
+    ax1.plot(star_az,star_alt,'b*')
+    ax1.plot(traj_az,traj_alt,'b.',markersize=0.75)
+    #Fill the colors between the limits and 0 altitude
+    ax1.fill_between(az,alt_limit,np.zeros(len(az)),color='red',alpha=1)
+    ax1.fill_between(az,tree_limit,alt_limit,color='#00cc00',
+                     where=tree_limit>alt_limit,alpha=1)
+    #Set the axis limits
+    ax1.set_xlim(-180,180)
+    ax1.set_ylim(0,90)
+    ax1.set_xlabel("Azimuth[°]")
+    
+    #Later we could exclude circumpolar stars
+    #Create upper x-axis ticks and labels
+    ax2.set_xlim(ax1.get_xlim())
+    ax2.set_xticks(traj_ticks_az)
+    ax2.set_xticklabels(traj_ticks_ha)
+    ax2.set_xlabel("Hour angle [h]")
+    #plt.title('Waltz Pointing Limits')
+    plt.show()
+    
+
+    
+    
+
+    
 
 
 
