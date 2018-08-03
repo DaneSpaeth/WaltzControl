@@ -3,8 +3,12 @@ import time
 import datetime
 import locale
 import pathlib
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import lx200commands as lx
+from plot_coords import plot_traj_limits_altaz_GUI
 
 class WaltzGUI(lx.Lx200Commands):
     def __init__(self, master):
@@ -273,6 +277,17 @@ class WaltzGUI(lx.Lx200Commands):
                                      font=('arial', 15))
         self.target_dec_entry.grid(row=2, column=1,pady=10)
         
+        self.target_time_label= Label(self.target_frame,
+                                     font=('arial', 15),
+                                     text=" Obs \n Time")
+        self.target_time_label.grid(row=0,column=2,padx=10)
+        
+        self.target_time_display=Label(self.target_frame,
+                                    font=('arial', 15),
+                                    bg='red',
+                                    width=10)
+        self.target_time_display.grid(row=0,column=3,pady=10)
+        
         self.target_alt_label = Label(self.target_frame,
                                      font=('arial', 15),
                                      text="ALT")
@@ -302,6 +317,9 @@ class WaltzGUI(lx.Lx200Commands):
                                          state='disabled',
                                          command=self.slew_to_target_buttonclick)
         self.slew_target_button.grid(row=3,columnspan=4)
+        
+        self.plot_frame=Frame(master)
+        self.plot_frame.grid(row=2,columnspan=4)
         
         #At first check if serial connection is open (also contains initial commands)
         self._respond_to_connection_state()
@@ -348,6 +366,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         #Commands to be executed even without connection
         self.refresh_times()
+        self.refresh_plot()
         
         #If connection is not open close program
         if not self.connected:
@@ -437,6 +456,20 @@ class WaltzGUI(lx.Lx200Commands):
             self.UTC = UTC_now
             #Display UTC
             self.UTC_display.config(text=self.UTC)
+            
+    def refresh_plot(self):
+        """Refreshs Plot.
+        """
+        plt.close('all')
+        fig = plot_traj_limits_altaz_GUI(False,False, self.ha_float, self.dec_float)
+        canvas = FigureCanvasTkAgg(fig, master = self.plot_frame)
+        canvas._tkcanvas.grid(row=0,column=0)
+        self.master.after(1000, self.refresh_plot)
+        
+    def stop_refreshing_plot(self):
+        """Cancels refreshing the Plot.
+        """
+        
     
     def display_coordinates(self):
         """ Displays Right ascension and Declination.
@@ -463,7 +496,8 @@ class WaltzGUI(lx.Lx200Commands):
         super().calculate_target_alt_az_ha()
         self.target_alt_display.config(text=self.target_alt)
         self.target_az_display.config(text=self.target_az)
-        self.master.after(500,self.refresh_target_alt_az_ha)
+        self.target_time_display.config(text=self.target_obs_time)
+        self.master.after(5000,self.refresh_target_alt_az_ha)
         
     def interchange_west_east(self):
         """Interchanges West and East Buttons.
@@ -640,6 +674,8 @@ class WaltzGUI(lx.Lx200Commands):
             self.target_alt_display.config(bg='red')
             self.target_az_display.config(text=self.target_az)
             self.target_az_display.config(bg='red')
+            self.target_time_display.config(text=self.target_obs_time)
+            self.target_time_display.config(bg='red')
             self.slew_target_button.config(state='disabled')
             return 0
         else:
@@ -649,6 +685,8 @@ class WaltzGUI(lx.Lx200Commands):
             self.target_alt_display.config(bg='light green')
             self.target_az_display.config(text=self.target_az)
             self.target_az_display.config(bg='light green')
+            self.target_time_display.config(text=self.target_obs_time)
+            self.target_time_display.config(bg='light green')
       
       
     def set_hip_target_from_entry(self, event):
@@ -980,3 +1018,9 @@ class WaltzGUI(lx.Lx200Commands):
         with open(str(file_path), 'a') as ps_file:
             print('Saving pointing star to (new format) file')
             ps_file.write(line)
+            
+    def close_window(self):
+        """Defines which actions to call when window is destroyed.
+        """
+        plt.close('all')
+        master.destroy()

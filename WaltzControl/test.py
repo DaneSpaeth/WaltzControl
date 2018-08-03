@@ -1,62 +1,73 @@
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkinter as tk
 import numpy as np
-import math
-lat=math.radians(49.3978620896919)
-horizon_limit=12
 
-def calc_alt_limit(az):
-    """ Calculates altitude limits.
+from coord_operations import calc_alt_limit, calc_tree_limit, equ_to_altaz, altaz_to_equ, approx_obs_time
+
+star_ha=3
+star_dec=30
+
+#Create az and alt_limit and tree_limit array
+az=np.arange(-180,180,0.01)
+alt_limit=np.zeros(len(az))
+tree_limit=np.zeros(len(az))
+
+#Calculate limits
+alt_limit=calc_alt_limit(az)
+tree_limit=calc_tree_limit(az)
     
-        Returns Altitude limit in degrees.
-    """
-    #Return horizon limit outside of cupboard region
-    #if not 97.0 < az < 150.0:
-    #    alt_limit=horizon_limit
-    #    return alt_limit
-    alt_limit=horizon_limit*((az < 90)+(az>150))
-    #Cupboard Limits
-    #Define cupboard limits as np array
-    #First and last limits are artificial horizontal limits
-    #Up to these values the cupboard limits will act
-    #Range from az=97° to 150°
-    board_lim=np.array([[12.0, 97.0],
-                       [18.047683650516614, 101.22273624588037],
-                       [19.922540694112776, 108.09973819537765],
-                       [19.92473999691732, 112.96653118269231],
-                       [18.1891109125214, 115.94832778139686],
-                       [17.26156820756814, 119.6115621873876],
-                       [17.3079984461787, 124.02768286442313],
-                       [17.61337050520085, 128.47376745531645],
-                       [16.514643086444128, 131.5063030183839],
-                       [17.105176559235456, 135.7850030762675],
-                       [15.574353529644203, 138.2131928476609],
-                       [15.367408374687445, 141.5357258928432],
-                       [13.465127305224598, 143.60311637027976],
-                       [12.635376162837199,146.34084417895636],
-                       [12.0, 150.0]])
+#Calculate star_az and star_alt
+star_alt,star_az,_,__=equ_to_altaz(star_ha,star_dec)
+#Define star trajectory (dec stays constant, hour angle increases)
+traj_ha=np.arange(-11.999,11.999,0.05)
+traj_dec=np.ones(len(traj_ha))*star_dec
+#Calculate star trajectory in alt and az
+traj_alt=np.zeros(len(traj_ha))
+traj_az=np.zeros(len(traj_ha))
+traj_alt,traj_az=equ_to_altaz(traj_ha,traj_dec)
     
-    #We want to find the two defined limits nearest to given az
-    #Then we want to take the highest limit of the two
-
-    #Compute difference between limit azs an given az
-    diff=np.subtract(board_lim[:,1],az)
-    #Take only positive and negative differences
-    pos=diff[diff>=0]
-    neg=diff[diff<0]
-    #Find one limit at lowest positive value of difference in az
-    up_az_lim=board_lim[np.where(diff==np.amin(pos))][0]
-    #The other at greatest negative value
-    low_az_lim=board_lim[np.where(diff==np.amax(neg))][0]
-
-    #Take only altitude entries
-    up_alt_lim=up_az_lim[0]
-    low_alt_lim=low_az_lim[0]
-
-    #Get Maximum of the two altitude limits
-    alt_limit=np.maximum(up_alt_lim,low_alt_lim)
+#Create array, where to put the hour angle ticks
+traj_ticks_ha=np.arange(np.round(star_ha),12)
+traj_ticks_dec=np.ones(len(traj_ticks_ha))*star_dec
+#Calculate the corresponding azimuth ticks
+__,traj_ticks_az=equ_to_altaz(traj_ticks_ha,traj_ticks_dec)
+#Tranform to integers for style
+traj_ticks_ha=traj_ticks_ha.astype(int)
     
-    return alt_limit
+#Plot
+fig = Figure(figsize = (9, 6), facecolor = "white")
+ax1 = fig.add_subplot(111)
+#Add second axis to get x_labels at upper x-axis
+ax2 = ax1.twiny()
+    
+#Plot alt_limit,tree_limits and star position and trajectory
+ax1.plot(az,alt_limit,color='red')
+ax1.plot(az,tree_limit,color='#00cc00',linewidth=0.0)
+ax1.plot(star_az,star_alt,'b*')
+ax1.plot(traj_az,traj_alt,'b.',markersize=0.75)
+#Fill the colors between the limits and 0 altitude
+ax1.fill_between(az,alt_limit,np.zeros(len(az)),color='red',alpha=1)
+ax1.fill_between(az,tree_limit,alt_limit,color='#00cc00',
+                 where=tree_limit>alt_limit,alpha=1)
+#Set the axis limits
+ax1.set_xlim(-180,180)
+ax1.set_ylim(0,90)
+ax1.set_xlabel("Azimuth[°]")
+    
+#Later we could exclude circumpolar stars
+#Create upper x-axis ticks and labels
+ax2.set_xlim(ax1.get_xlim())
+ax2.set_xticks(traj_ticks_az)
+ax2.set_xticklabels(traj_ticks_ha)
+ax2.set_xlabel("Hour angle [h]")
+    
+    
+root = tk.Tk()
+master = root
+plot_frame=tk.Frame(root)
+plot_frame.grid(row=0,column=0)
+canvas = FigureCanvasTkAgg(fig, master = plot_frame)
+canvas._tkcanvas.grid(row=0,column=0)
 
-
-az=np.array([30,60,90,120,145,180,210,240,280])
-
-print(calc_alt_limit(az))
+root.mainloop()

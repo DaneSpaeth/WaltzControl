@@ -8,7 +8,7 @@ from astropy.time import Time
 
 import communication_commands as com
 from hip_position_func import hip_position
-from coord_operations import equ_to_altaz, check_coordinates
+from coord_operations import equ_to_altaz, check_coordinates, approx_obs_time
 
 class Lx200Commands(com.CommunicationCommands):
     """Inherits from CommunicationCommands and thus from Serial.
@@ -48,6 +48,8 @@ class Lx200Commands(com.CommunicationCommands):
         self.target_ha_float=False
         self.target_alt_float=False
         self.target_az_float=False
+        #Store the leftover observing time for current target.
+        self.target_obs_time=""
         
         
     
@@ -166,7 +168,8 @@ class Lx200Commands(com.CommunicationCommands):
         
         
     def calculate_target_alt_az_ha(self):
-        """ Calculates target alt, az and hour angle.
+        """ Calculates target alt, az, hour angle and leftover observing time.
+           
         
             Seperate function to be able to refresh it in gui via after.
             Because alt, az and ha change with time.
@@ -186,6 +189,17 @@ class Lx200Commands(com.CommunicationCommands):
              self.target_az_float,
              self.target_alt,
              self.target_az)=equ_to_altaz(self.target_ha_float,self.target_dec_float)
+            
+            #Calculate the leftover observing time as float
+            obs_time_float=approx_obs_time(self.target_ha_float,self.target_dec_float)
+            
+            #Format to 00h00min
+            hours=int(obs_time_float)
+            rest=abs(obs_time_float-hours)*60
+            minutes=int(round(rest))
+            self.target_obs_time="{:02}h{:02}min".format(hours,minutes)
+            
+            
         except ValueError:
             print('Found Error')
             return 0

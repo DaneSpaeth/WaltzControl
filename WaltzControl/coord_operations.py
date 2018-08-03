@@ -124,7 +124,7 @@ def check_coordinates(alt,az):
         #Calculate altitude limit
         alt_limit=calc_alt_limit(az)
             
-        #Check if altitude is above or below horizontal limit
+        #Check if altitude is above or below limit
         if alt>=alt_limit:
             return True
         else:
@@ -227,6 +227,8 @@ def calc_alt_limit(az):
 def calc_obs_time(ha,dec):
     """Calculates timespan, one can still observe star until it reaches 
        horizon limit.
+       
+       Better use approx_obs_time.
     """
     
     #First calculate altitude and azimuth
@@ -270,6 +272,63 @@ def calc_obs_time(ha,dec):
             #Convert to solar time units (in seconds)
             obs_time=obs_time*0.9972695601852*3600
             return obs_time
+        
+def approx_obs_time(star_ha,star_dec):
+    """Calculates an approximate observing time for a star.
+       
+       
+       Input: Hour angle in hours as float. Declination in degrees as float.
+       Output: Observable time in solar seconds.
+       Uses hard limits of the Waltz Telescope
+    """
+    #First check if star is already under a limit
+    star_alt,star_az,_,__=equ_to_altaz(star_ha,star_dec)
+    if not check_coordinates(star_alt,star_az):
+        return 0
+    
+    #Create az and alt_limit array
+    az=np.arange(-180,180,0.01)
+    alt_limit=np.zeros(len(az))
+    
+    #Define dec_limits and hour angle arrays
+    dec_limit=np.zeros(len(az))
+    ha=np.zeros(len(az))
+    
+    #Calculate alt_limit for every az 
+    alt_limit=calc_alt_limit(az)
+
+    #Transform altaz limits to ha,dec limits
+    ha,dec_limit=altaz_to_equ(alt_limit,az)
+        
+    #Define star trajectory (dec stays constant, hour angle increases)
+    traj_ha=np.arange(-11.999,11.999,0.05)
+    traj_dec=np.ones(len(traj_ha))*star_dec
+    
+    #Approximately calculate time until hard limit is reached
+    #If Star is circumpolar obs_time is 24 hours
+    if star_dec > np.amax(dec_limit):
+        sid_obs_time=24.
+        obs_time=24.
+    else:
+        #If not circumpolar
+        #Calculate the absolute differences between those dec_limits 
+        #that are at hour angles larger than the stars hour angle
+        #(to prevent to get the intersection on the eastern side)
+        #and the stars declination
+        dec_diff=np.abs(dec_limit[ha>star_ha]-star_dec)
+        #Also cut out the hour angle values on the eastern side in ha array
+        #Needed to get same dimension
+        #Otherwise argmin wouldn't work
+        ha_later=ha[ha>star_ha]
+        #Hour Anlge at setting (reaching red limit) is at the same index as the
+        #minimum of dec_diff
+        ha_set=ha_later[np.argmin(dec_diff)]
+        #Calculate the sidereal time until the star sets
+        sid_obs_time=ha_set-star_ha
+        #Sidereal hours convert to solar hours (normal time)
+        #via 1h_sid=0.9972695601852h_sol
+        obs_time=sid_obs_time*0.9972695601852
+    return obs_time
         
 def calc_tree_limit(az):
     """Calculates tree limit in altitude for given azimuth.
