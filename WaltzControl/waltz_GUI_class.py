@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import lx200commands as lx
-from plot_coords import plot_traj_limits_altaz_GUI
+from plot_coords import plot_traj_limits_altaz_GUI, add_star_and_traj, add_current_pos
 
 class WaltzGUI(lx.Lx200Commands):
     def __init__(self, master):
@@ -318,8 +318,18 @@ class WaltzGUI(lx.Lx200Commands):
                                          command=self.slew_to_target_buttonclick)
         self.slew_target_button.grid(row=3,columnspan=4)
         
+        #Plot Frame
         self.plot_frame=Frame(master)
         self.plot_frame.grid(row=2,columnspan=4)
+        #Add instance variables to store the plot and the different axes,
+        #and positions globally
+        self.canvas=False
+        self.fig=False
+        self.ax1=False
+        self.star_plot=False
+        self.traj_plot=False
+        self.pos_plot=False
+        self.ax2=False
         
         #At first check if serial connection is open (also contains initial commands)
         self._respond_to_connection_state()
@@ -366,7 +376,7 @@ class WaltzGUI(lx.Lx200Commands):
         
         #Commands to be executed even without connection
         self.refresh_times()
-        self.refresh_plot()
+        self.initialize_plot()
         
         #If connection is not open close program
         if not self.connected:
@@ -457,19 +467,34 @@ class WaltzGUI(lx.Lx200Commands):
             #Display UTC
             self.UTC_display.config(text=self.UTC)
             
-    def refresh_plot(self):
+    def initialize_plot(self):
         """Refreshs Plot.
         """
-        plt.close('all')
-        fig = plot_traj_limits_altaz_GUI(False,False, self.ha_float, self.dec_float)
-        canvas = FigureCanvasTkAgg(fig, master = self.plot_frame)
-        canvas._tkcanvas.grid(row=0,column=0)
-        self.master.after(1000, self.refresh_plot)
+        #Close all plots for safety reasons
+        #plt.close('all')
+        (self.fig,
+         self.ax1) = plot_traj_limits_altaz_GUI(False,False,False,False)
+        self.canvas = FigureCanvasTkAgg(self.fig, master = self.plot_frame)
+        self.canvas._tkcanvas.grid(row=0,column=0)
+        self.plot_current_pos()
         
-    def stop_refreshing_plot(self):
-        """Cancels refreshing the Plot.
+    def plot_current_pos(self):
+        """Plots current position.
         """
+        #First remove existing pos_plot (if it exists)
+        if self.pos_plot:
+            self.pos_plot.pop(0).remove()
+        #Now add new pos_plot
+        self.pos_plot=add_current_pos(self.ax1,self.ha_float,self.dec_float)
+        self.canvas.draw()
+        self.master.after(1000,self.plot_current_pos)
         
+        
+        
+    def plot_star_and_traj(self,ax1):
+        """Plots star and trajectory.
+        """
+        add_star_and_traj(ax1,4.1234,30.1234)
     
     def display_coordinates(self):
         """ Displays Right ascension and Declination.
@@ -488,6 +513,7 @@ class WaltzGUI(lx.Lx200Commands):
         self.DEC_display.config(text=self.dec)
         if not self.connected:
             self._respond_to_connection_state()
+
         self.master.after(500,self.display_coordinates)
         
     def refresh_target_alt_az_ha(self):
