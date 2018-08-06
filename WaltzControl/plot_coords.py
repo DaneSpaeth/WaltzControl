@@ -224,7 +224,8 @@ def add_current_pos(axis,current_ha,current_dec):
     """Adds current position to existing axis in existing plot.
     """
     current_alt,current_az,_,__=equ_to_altaz(current_ha,current_dec)
-    pos_plot=axis.plot(current_az,current_alt,color='black',marker='o')
+    pos_plot=axis.plot(current_az,current_alt,color='black',marker='o',
+                       markersize=10,markeredgewidth=1,markerfacecolor='None')
     return pos_plot
     
     

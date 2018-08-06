@@ -324,7 +324,6 @@ class WaltzGUI(lx.Lx200Commands):
         #Add instance variables to store the plot and the different axes,
         #and positions globally
         self.canvas=False
-        self.fig=False
         self.ax1=False
         self.star_plot=False
         self.traj_plot=False
@@ -472,14 +471,14 @@ class WaltzGUI(lx.Lx200Commands):
         """
         #Close all plots for safety reasons
         #plt.close('all')
-        (self.fig,
+        (fig,
          self.ax1) = plot_traj_limits_altaz_GUI(False,False,False,False)
-        self.canvas = FigureCanvasTkAgg(self.fig, master = self.plot_frame)
+        self.canvas = FigureCanvasTkAgg(fig, master = self.plot_frame)
         self.canvas._tkcanvas.grid(row=0,column=0)
         self.plot_current_pos()
         
     def plot_current_pos(self):
-        """Plots current position.
+        """Overplots current position. Plot needs to already exist.
         """
         #First remove existing pos_plot (if it exists)
         if self.pos_plot:
@@ -489,12 +488,28 @@ class WaltzGUI(lx.Lx200Commands):
         self.canvas.draw()
         self.master.after(1000,self.plot_current_pos)
         
+    def plot_star_and_traj(self):
+        """Overplots star position and trajectory. Plot need to already exist.
         
-        
-    def plot_star_and_traj(self,ax1):
-        """Plots star and trajectory.
+           Will be called periodically with refresh_target_alt_az_ha.
         """
-        add_star_and_traj(ax1,4.1234,30.1234)
+        #First remove existing star_plot/traj_plot (if they exists)
+        if self.star_plot:
+            self.star_plot.pop(0).remove()
+            self.traj_plot.pop(0).remove()
+            self.ax2.remove()
+        if not self.target_ra_float or not self.target_dec_float:
+            print('No Plot')
+            return 0
+        #Now add new_star_plot
+        (self.star_plot,
+         self.traj_plot,
+         self.ax2)=add_star_and_traj(self.ax1,
+                                     self.target_ha_float,
+                                     self.target_dec_float)
+        self.canvas.draw()
+        
+        
     
     def display_coordinates(self):
         """ Displays Right ascension and Declination.
@@ -523,6 +538,7 @@ class WaltzGUI(lx.Lx200Commands):
         self.target_alt_display.config(text=self.target_alt)
         self.target_az_display.config(text=self.target_az)
         self.target_time_display.config(text=self.target_obs_time)
+        self.plot_star_and_traj()
         self.master.after(5000,self.refresh_target_alt_az_ha)
         
     def interchange_west_east(self):
@@ -694,6 +710,7 @@ class WaltzGUI(lx.Lx200Commands):
         """ Calls set_target_coordinates() of Lx200Commands.
             Defines GUIs reaction to target_coordinates.
         """
+        
         #Call set_target_coordinates
         if not self.set_target_coordinates():
             self.target_alt_display.config(text=self.target_alt)
@@ -703,6 +720,8 @@ class WaltzGUI(lx.Lx200Commands):
             self.target_time_display.config(text=self.target_obs_time)
             self.target_time_display.config(bg='red')
             self.slew_target_button.config(state='disabled')
+            #Also plot target coordinates
+            self.plot_star_and_traj()
             return 0
         else:
             #Display target_alt and az
@@ -713,7 +732,8 @@ class WaltzGUI(lx.Lx200Commands):
             self.target_az_display.config(bg='light green')
             self.target_time_display.config(text=self.target_obs_time)
             self.target_time_display.config(bg='light green')
-      
+            #Also plot target coordinates
+            self.plot_star_and_traj()
       
     def set_hip_target_from_entry(self, event):
         """ Gets a HIP number from the HIP_entry widget and calculates the coordinates.
@@ -1045,8 +1065,3 @@ class WaltzGUI(lx.Lx200Commands):
             print('Saving pointing star to (new format) file')
             ps_file.write(line)
             
-    def close_window(self):
-        """Defines which actions to call when window is destroyed.
-        """
-        plt.close('all')
-        master.destroy()
