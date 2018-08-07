@@ -807,6 +807,7 @@ class Lx200Commands(com.CommunicationCommands):
         #Set coordinates
         self.set_target_ra_from_string(self.LST)
         self.set_target_dec_from_string('+49 23 32')
+        self.set_target_coordinates()
         #Slew to target
         self.slew_to_target()
         
@@ -818,6 +819,7 @@ class Lx200Commands(com.CommunicationCommands):
         #Set coordinates 
         self.set_target_ra_from_string(self.LST)
         self.set_target_dec_from_string('+05 00 00')
+        self.set_target_coordinates()
         #Slew to target
         self.slew_to_target()
         
@@ -830,6 +832,7 @@ class Lx200Commands(com.CommunicationCommands):
         #Set coordinates 
         self.set_target_ra_from_string(self.LST)
         self.set_target_dec_from_string('-25 00 00')
+        self.set_target_coordinates()
         #Slew to target
         self.slew_to_target()
         

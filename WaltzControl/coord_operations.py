@@ -118,7 +118,8 @@ def check_coordinates(alt,az):
            Returns False if coordinates are in limits.
         """
         #Check if alt and az are set as floats
-        if not alt or not az:
+        if (not isinstance(alt, (int, float)) 
+            or not isinstance(az, (int, float))):
             return False
         
         #Calculate altitude limit
