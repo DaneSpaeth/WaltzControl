@@ -499,7 +499,6 @@ class WaltzGUI(lx.Lx200Commands):
             self.traj_plot.pop(0).remove()
             self.ax2.remove()
         if not self.target_ra_float or not self.target_dec_float:
-            print('No Plot')
             return 0
         #Now add new_star_plot
         (self.star_plot,
