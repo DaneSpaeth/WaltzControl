@@ -511,6 +511,7 @@ class Lx200Commands(com.CommunicationCommands):
             
             Only function that is allowed to send target_coordinates.
             Will check if both coordinates are set and will only send if True.
+            Will be called by set_target_coordinates, never directly.
         """
         #self.target_input contains binary inputs for serial
         #If one or two coordinates are missing. return 0

@@ -9,6 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import lx200commands as lx
 from plot_coords import plot_traj_limits_altaz_GUI, add_star_and_traj, add_current_pos
+from coord_operations import check_coordinates
 
 class WaltzGUI(lx.Lx200Commands):
     def __init__(self, master):
@@ -530,15 +531,26 @@ class WaltzGUI(lx.Lx200Commands):
 
         self.master.after(500,self.display_coordinates)
         
-    def refresh_target_alt_az_ha(self):
+    def refresh_target_alt_az_ha(self,call_itself=True):
         """ Executes Lx200Commands.calculate_target_alt_az_ha every 500 ms.
         """
+        #Calculate target alt and az and obs time
         super().calculate_target_alt_az_ha()
+        #Display alt, az and obs time
         self.target_alt_display.config(text=self.target_alt)
         self.target_az_display.config(text=self.target_az)
         self.target_time_display.config(text=self.target_obs_time)
+        #Check coordinates to reply with correct colors
+        if check_coordinates(self.target_alt_float,
+                                    self.target_az_float):
+            self.display_alt_az('light green')
+        else:
+            self.display_alt_az('red')
+        #Update the plot
         self.plot_star_and_traj()
-        self.master.after(5000,self.refresh_target_alt_az_ha)
+        #Optionally call itself
+        if call_itself:
+            self.master.after(5000,self.refresh_target_alt_az_ha)
         
     def interchange_west_east(self):
         """Interchanges West and East Buttons.
@@ -644,6 +656,7 @@ class WaltzGUI(lx.Lx200Commands):
                 print('Slew to Park Position the first time')
                 #Slew telescope to parking position
                 super().park_telescope()
+                self.refresh_target_alt_az_ha(call_itself=False)
             #Start waiting: Call wait_for_slew_finish with call_itself=False
             #So the funtion will just check if slew has finished
             if not self.wait_for_slew_finish(call_itself=False):
@@ -674,6 +687,7 @@ class WaltzGUI(lx.Lx200Commands):
                 print('Slew to Park Position the second time')
                 #Slew telescope to parking position
                 super().park_telescope()
+                self.refresh_target_alt_az_ha(call_itself=False)
                 #Wait again as above. But call counter=2 fpr second parking loop
             if not self.wait_for_slew_finish(call_itself=False):
                 print('Waiting for Second Parking to finish')
@@ -695,6 +709,7 @@ class WaltzGUI(lx.Lx200Commands):
            Uses LX200Commands primary_mirror_pos.
         """
         super().primary_mirror_pos()
+        self.refresh_target_alt_az_ha(call_itself=False)
         self.wait_for_slew_finish()
         
     def secondary_mirror_pos_buttonclick(self):
@@ -703,6 +718,7 @@ class WaltzGUI(lx.Lx200Commands):
            Uses LX200Commands secondary_mirror_pos.
         """
         super().secondary_mirror_pos()
+        self.refresh_target_alt_az_ha(call_itself=False)
         self.wait_for_slew_finish()
         
     def set_target_coordinates_gui(self):
@@ -712,27 +728,30 @@ class WaltzGUI(lx.Lx200Commands):
         
         #Call set_target_coordinates
         if not self.set_target_coordinates():
-            self.target_alt_display.config(text=self.target_alt)
-            self.target_alt_display.config(bg='red')
-            self.target_az_display.config(text=self.target_az)
-            self.target_az_display.config(bg='red')
-            self.target_time_display.config(text=self.target_obs_time)
-            self.target_time_display.config(bg='red')
             self.slew_target_button.config(state='disabled')
+            self.display_alt_az('red')
             #Also plot target coordinates
             self.plot_star_and_traj()
             return 0
         else:
             #Display target_alt and az
             self.slew_target_button.config(state='normal')
-            self.target_alt_display.config(text=self.target_alt)
-            self.target_alt_display.config(bg='light green')
-            self.target_az_display.config(text=self.target_az)
-            self.target_az_display.config(bg='light green')
-            self.target_time_display.config(text=self.target_obs_time)
-            self.target_time_display.config(bg='light green')
+            self.display_alt_az('light green')
             #Also plot target coordinates
             self.plot_star_and_traj()
+            
+    def display_alt_az(self,color):
+        """Displays alt and az with given color.
+        
+           Convenience function.
+        """
+        self.target_alt_display.config(text=self.target_alt)
+        self.target_alt_display.config(bg=color)
+        self.target_az_display.config(text=self.target_az)
+        self.target_az_display.config(bg=color)
+        self.target_time_display.config(text=self.target_obs_time)
+        self.target_time_display.config(bg=color)
+        
       
     def set_hip_target_from_entry(self, event):
         """ Gets a HIP number from the HIP_entry widget and calculates the coordinates.
