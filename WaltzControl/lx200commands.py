@@ -621,9 +621,10 @@ class Lx200Commands(com.CommunicationCommands):
     
     def set_hip_target(self,hip_nr):   
         """ Takes a string hipparcos number an sets its coordinates as target coordinates.
+            Will not write to serial port. Only saves coordinates.
             Uses hip_position from hip_position_func.py.
-            At the moment it uses refraction corrected coordinates with standard values for 
-            air temperature and air pressure.
+            At the moment it uses refraction uncorrected coordinates.
+            
         """ 
         try:
             hip_nr=int(hip_nr)
@@ -654,6 +655,7 @@ class Lx200Commands(com.CommunicationCommands):
         format_ra='{} {} {}'.format(ra[:2], ra[4:6],ra[8:10])
         format_dec='{} {} {}'.format(dec[:3], dec[7:9], dec[11:13])
         
+        #Only set target coordinates to strings. Don't send to serial yet.
         self.set_target_ra_from_string(format_ra)
         self.set_target_dec_from_string(format_dec)
         
@@ -700,6 +702,9 @@ class Lx200Commands(com.CommunicationCommands):
         #Then you need to synchronize to these coordinates since they should be
         #Perfectly in your pinhole in that moment.
         self.set_hip_target(hip_nr)
+        #Send target coordinates again to have the coords calculated at
+        #the moment of synchronization
+        self.set_target_coordinates()
         inp=b'#:CM#'
         self.write(inp)
         output=self.get_response()
@@ -711,8 +716,7 @@ class Lx200Commands(com.CommunicationCommands):
             Target needs to be aligned with the pinhole manually before.
         """
         if self.target_ra and self.target_dec:
-            self.set_target_ra_from_string(self.target_ra)
-            self.set_target_dec_from_string(self.target_dec)
+            #Coordinates will be set beforehand in GUI
             inp=b'#:CM#'
             self.write(inp)
             output=self.get_response()

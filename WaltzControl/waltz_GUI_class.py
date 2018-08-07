@@ -838,9 +838,9 @@ class WaltzGUI(lx.Lx200Commands):
             self.target_dec_entry.insert(0, self.target_dec)
         else:
             #If no Hip target_ get coordinates from entries
+            #Calling one entry is enough since always both entries are checked
             #None refers to no event (such as Return)
             self.set_target_ra_from_entry(None)
-            self.set_target_dec_from_entry(None)
             if hip_nr=='' and self.target_ra and self.target_dec:
                 super().sync_on_coordinates()
             else:
