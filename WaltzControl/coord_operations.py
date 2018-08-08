@@ -1,6 +1,8 @@
 from math import radians, degrees, sin, cos, tan, asin, acos, atan2
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 #Define Latitude in radians
 lat=radians(49.3978620896919)
 
@@ -457,10 +459,47 @@ def calc_tree_limit(az):
     tree_lim=np.maximum(up_alt_lim,low_alt_lim)
     
     return tree_lim
-
-
-
     
-       
+def calculate_refraction_from_true_coord(ha,dec,temp=10,press=101.0):
+    """Calculates refraction for given coordinates.
+    
+       Input: True ha, dec in degrees. Temp in degrees Celsius.
+              Pressure in kPa.
+       Output: Refraction correction in arcminutes.
+    """
+    #Calculate altitude and azimuth
+    alt,az,_,__=equ_to_altaz(ha,dec)
+    #Calculate temperature/pressure factor
+    factor= press/101*283/(273+temp)
+    #Calculate refraction in arcminutes
+    R=1.02*(1/tan(radians(alt+10.3/(alt+5.11))))*factor
+    
+    return R
+    
+def calculate_refraction_from_apparent_coord(ha,dec,temp=10,press=101.0):
+    """Calculates refraction for given coordinates.
+    
+       Input: Apparent ha, dec in degrees. Temp in degrees Celsius.
+              Pressure in kPa.
+       Output: Refraction correction in arcminutes.
+    """
+    #Calculate altitude and azimuth
+    alt,az,_,__=equ_to_altaz(ha,dec)
+    print(alt,az)
+    #Calculate temperature/pressure factor
+    factor= press/101*283/(273+temp)
+    print(factor)
+    #Calculate refraction in arcminutes
+    R=(1/tan(radians(alt+7.31/(alt+4.4))))*factor
+    
+    return R
+    
+dec=np.arange(-41,49)
+ha=np.zeros(len(dec))
+R=np.zeros(len(dec))
 
+for index in range(len(dec)):
+    R[index]=calculate_refraction_from_true_coord(ha[index],dec[index])
+plt.plot(dec,R)
+plt.show()
 
