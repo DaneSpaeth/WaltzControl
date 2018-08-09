@@ -435,68 +435,68 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,Date,term,LST=None,
           #Plotting the original differences
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(ha_obs,ha_diff,yerr=ha_diff_error,
+            plt.errorbar(ha_obs,ha_diff*60,yerr=ha_diff_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
-            plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
+            plt.ylabel('ha_diff = ha_obs-ha_calc [min]')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
-            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+            plt.plot(ha_space,0.0022*np.ones(len(ha_space))*60,
                      color='black',label='FOV')
-            plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(ha_space,-0.0022*np.ones(len(ha_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
           
           #Plotting the IH corrected differences
             plt.subplot(222)
-            plt.errorbar(ha_obs,ha_diff_corr,yerr=ha_diff_corr_error,
+            plt.errorbar(ha_obs,ha_diff_corr*60,yerr=ha_diff_corr_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
-            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
+            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [min]')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
-            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+            plt.plot(ha_space,0.0022*np.ones(len(ha_space))*60,
                      color='black',label='FOV')
-            plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(ha_space,-0.0022*np.ones(len(ha_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
             
             #Plotting the second correction if the folowing terms are chosen 
             if term == 'CH' or term =='NP' or term =='MA' or term == 'ME'or term =='all' :
                 plt.subplot(224)
-                plt.errorbar(ha_obs,ha_diff_corr_sec,
-                             yerr=ha_diff_corr_sec_error,
+                plt.errorbar(ha_obs,ha_diff_corr_sec*60,
+                             yerr=ha_diff_corr_sec_error*60,
                              linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed hour angle [h]')
-                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
+                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [min]')
                 plt.title('Second Correction')
-                plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+                plt.plot(ha_space,0.0022*np.ones(len(ha_space))*60,
                          color='black',label='FOV')
-                plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
-                plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+                plt.plot(ha_space,-0.0022*np.ones(len(ha_space))*60,color='black')
+                #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
           
         
         ### HA_Diff vs. DEC_Obs ###
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(dec_obs, ha_diff,yerr=ha_diff_error,
+            plt.errorbar(dec_obs, ha_diff*60,yerr=ha_diff_error*60,
                          linestyle='none',marker='o', label=ObservationDate)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
-            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+            plt.ylabel('ha_diff = ha_obs-ha_calc [min]')
+            plt.plot(dec_space,0.0022*np.ones(len(dec_space))*60,
                      color='black',label='FOV')
-            plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(dec_space,-0.0022*np.ones(len(dec_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
             
             plt.subplot(222)
-            plt.errorbar(dec_obs, ha_diff_corr,yerr=ha_diff_corr_error,
+            plt.errorbar(dec_obs, ha_diff_corr*60,yerr=ha_diff_corr_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
-            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [min]')
+            plt.plot(dec_space,0.0022*np.ones(len(dec_space))*60,
                      color='black',label='FOV')
-            plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(dec_space,-0.0022*np.ones(len(dec_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
             
             #Second Correction: Plot only in these cases
@@ -506,16 +506,16 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,Date,term,LST=None,
                 term == 'ME' or 
                 term =='all'):    
                 plt.subplot(224)
-                plt.errorbar(dec_obs,ha_diff_corr_sec,yerr=ha_diff_corr_error,
+                plt.errorbar(dec_obs,ha_diff_corr_sec*60,yerr=ha_diff_corr_error*60,
                              linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed declination[°]')
-                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
+                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [min]')
                 plt.title('Second Correction')
-                plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+                plt.plot(dec_space,0.0022*np.ones(len(dec_space))*60,
                          color='black',label='FOV')
-                plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),
+                plt.plot(dec_space,-0.0022*np.ones(len(dec_space))*60,
                          color='black')
-                plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+                #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
           
         
@@ -523,41 +523,41 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,Date,term,LST=None,
         
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(ha_obs,dec_diff,yerr=dec_diff_error,
+            plt.errorbar(ha_obs,dec_diff*60,yerr=dec_diff_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
-            plt.ylabel('dec_diff = dec_obs-dec_calc [°]')
-            plt.plot(ha_space,0.033*np.ones(len(ha_space)),
+            plt.ylabel("dec_diff = dec_obs-dec_calc [']")
+            plt.plot(ha_space,0.033*np.ones(len(ha_space))*60,
                      color='black',label='FOV')
-            plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(ha_space,-0.033*np.ones(len(ha_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
             
             plt.subplot(222)
-            plt.errorbar(ha_obs,dec_diff_corr,yerr=dec_diff_corr_error,
+            plt.errorbar(ha_obs,dec_diff_corr*60,yerr=dec_diff_corr_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
-            plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
-            plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',
+            plt.ylabel("dec_diff_corr = dec_obs-dec_corr [']")
+            plt.plot(ha_space,0.033*np.ones(len(ha_space))*60,color='black',
                      label='FOV')
-            plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(ha_space,-0.033*np.ones(len(ha_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
             
             
             #Second Correction: Plot only in these cases
             if term =='MA' or term == 'ME'or term =='all':
                 plt.subplot(224)
-                plt.errorbar(ha_obs,dec_diff_corr_sec,
-                             yerr=dec_diff_corr_sec_error,
+                plt.errorbar(ha_obs,dec_diff_corr_sec*60,
+                             yerr=dec_diff_corr_sec_error*60,
                              linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed hour angle [h]')
-                plt.ylabel('dec_diff_corr_sec = dec_obs-dec_corr [°]')
+                plt.ylabel("dec_diff_corr_sec = dec_obs-dec_corr [']")
                 plt.title('Second Correction')
-                plt.plot(ha_space,0.033*np.ones(len(ha_space)),
+                plt.plot(ha_space,0.033*np.ones(len(ha_space))*60,
                          color='black',label='FOV')
-                plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
-                plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+                plt.plot(ha_space,-0.033*np.ones(len(ha_space))*60,color='black')
+                #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
         
         
@@ -565,41 +565,41 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,Date,term,LST=None,
         
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(dec_obs,dec_diff,yerr=dec_diff_error,
+            plt.errorbar(dec_obs,dec_diff*60,yerr=dec_diff_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('dec_diff = dec_obs-dec_calc [°]')
-            plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+            plt.ylabel("dec_diff = dec_obs-dec_calc [']")
+            plt.plot(dec_space,0.033*np.ones(len(dec_space))*60,
                      color='black',label='FOV')
-            plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(dec_space,-0.033*np.ones(len(dec_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
             
             plt.subplot(222)
-            plt.errorbar(dec_obs,dec_diff_corr,yerr=dec_diff_corr_error,
+            plt.errorbar(dec_obs,dec_diff_corr*60,yerr=dec_diff_corr_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
-            plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+            plt.ylabel("dec_diff_corr = dec_obs-dec_corr [']")
+            plt.plot(dec_space,0.033*np.ones(len(dec_space))*60,
                      color='black',label='FOV')
-            plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            plt.plot(dec_space,-0.033*np.ones(len(dec_space))*60,color='black')
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
             
             
             #Second Correction: Plot only in these cases
             if term =='MA' or term == 'ME'or term =='all':
                 plt.subplot(224)
-                plt.errorbar(dec_obs,dec_diff_corr,yerr=dec_diff_error,
+                plt.errorbar(dec_obs,dec_diff_corr*60,yerr=dec_diff_error*60,
                              linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed declination [°]')
-                plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
+                plt.ylabel("dec_diff_corr = dec_obs-dec_corr [']")
                 plt.title('Second correction')
-                plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+                plt.plot(dec_space,0.033*np.ones(len(dec_space))*60,
                          color='black',label='FOV')
-                plt.plot(dec_space,-0.033*np.ones(len(dec_space)),
+                plt.plot(dec_space,-0.033*np.ones(len(dec_space))*60,
                          color='black')
-                plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+                #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
             
             #Plotting as Field of View
@@ -607,50 +607,88 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,Date,term,LST=None,
             #Initital Data
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(dec_diff,15.*ha_diff,linestyle='none',
+            plt.errorbar(dec_diff*60,15.*ha_diff*60,linestyle='none',
                          marker='.',label=ObservationDate)
             fig = plt.gcf()
             ax = fig.gca()
         
-            circle1 = plt.Circle((0, 0), 0.0333, color='b',fill=False)
+            circle1 = plt.Circle((0, 0), 0.0333*60, color='b',fill=False)
             ax.add_artist(circle1)
             plt.axis('scaled')
-            plt.xlabel('Declination Difference [°]')
-            plt.ylabel('Hour Angle Difference [°]')
+            plt.xlabel("Declination Difference [']")
+            plt.ylabel("Hour Angle Difference [']")
             plt.title('Initial Data')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
            
             
             #First correction
             plt.subplot(222)
-            plt.errorbar(dec_diff_corr,15.*ha_diff_corr,
+            plt.errorbar(dec_diff_corr*60,15.*ha_diff_corr*60,
                          linestyle='none',marker='.',label=ObservationDate)
             fig = plt.gcf()
             ax = fig.gca()
         
-            circle1 = plt.Circle((0, 0), 0.0333, color='b',fill=False)
+            circle1 = plt.Circle((0, 0), 0.0333*60, color='b',fill=False)
             ax.add_artist(circle1)
             plt.axis('scaled')
-            plt.xlabel('Declination Difference [°]')
-            plt.ylabel('Hour Angle Difference [°]')
+            plt.xlabel("Declination Difference [']")
+            plt.ylabel("Hour Angle Difference [']")
             plt.title('First Correction')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             
             #Second Correction
             plt.subplot(224)
-            plt.errorbar(dec_diff_corr_sec,15.*ha_diff_corr_sec,
+            plt.errorbar(dec_diff_corr_sec*60,15.*ha_diff_corr_sec*60,
                          linestyle='none',marker='.',label=ObservationDate)
             fig = plt.gcf()
             ax = fig.gca()
         
-            circle1 = plt.Circle((0, 0), 0.0333, color='b',fill=False)
+            circle1 = plt.Circle((0, 0), 0.0333*60, color='b',fill=False)
             ax.add_artist(circle1)
             plt.axis('scaled')
-            plt.xlabel('Declination Difference [°]')
-            plt.ylabel('Hour Angle Difference [°]')
+            plt.xlabel("Declination Difference [']")
+            plt.ylabel("Hour Angle Difference [']")
             plt.title('Second Correction')
-            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+            #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
+            
+
+            #Differences vs Time
+            plt.figure()
+            plt.subplot(121)
+            plt.errorbar(LST,np.abs(ha_diff)*60,yerr=ha_diff_error*60,
+                     linestyle='none',marker='o')
+            plt.ylabel('abs(Hour Angle Difference) [min] (not corr)')
+            plt.xlabel('LST [h]')
+            
+            
+            plt.subplot(122)
+            plt.errorbar(LST,np.abs(dec_diff)*60,yerr=dec_diff_error*60,
+                     linestyle='none',marker='o')
+            plt.ylabel("abs(Declination Difference) ['] (not corr)")
+            plt.xlabel('LST [h]')
+            
+            plt.show()
+            
+            #Differences vs Time
+            plt.figure()
+            plt.subplot(121)
+            plt.errorbar(LST,np.abs(ha_diff_corr_sec)*60,yerr=ha_diff_corr_sec_error*60,
+                     linestyle='none',marker='o')
+            plt.ylabel("abs(Hour Angle Difference) [min] (2nd corr)")
+            plt.xlabel('LST [h]')
+            
+            
+            plt.subplot(122)
+            plt.errorbar(LST,np.abs(dec_diff_corr_sec)*60,yerr=dec_diff_corr_sec_error*60,
+                     linestyle='none',marker='o')
+            plt.ylabel("abs(Declination Difference) ['] (2nd corr)")
+            plt.xlabel('LST [h]')
+            
+            plt.show()
+            
+            
+            
             
         else: 
         #If we have all dates than we want to plot each date 
@@ -915,7 +953,7 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,Date,term,LST=None,
     return pfit
 
 
-def reading_in_data():
+def reading_in_data(refr_corr=True):
     """Reads in Pointing data from file.
     """
     #Reading in Data
@@ -930,9 +968,16 @@ def reading_in_data():
     #On Desktop (Dropbox)
     current_path=pathlib.Path.cwd()
     parrent_path=current_path.parent
-    file_path=(parrent_path /
-               'data' /
-               'pointing_stars_coordinates_without_refr_corr_18july2018.txt')
+    
+    if refr_corr:
+        file_path=(parrent_path /
+                   'data' /
+                   'pointing_stars_coordinates_18july2018.txt')
+    else:
+        file_path=(parrent_path /
+                   'data' /
+                   'pointing_stars_coordinates_without_refr_corr_18july2018.txt')
+            
     
     #Reading in the file
     readfile=open(str(file_path),'r')
@@ -955,15 +1000,17 @@ def reading_in_data():
         dec_calc=np.append(dec_calc,float(columns[3]))
         dec_obs=np.append(dec_obs,float(columns[4]))
         Date=np.append(Date,columns[5])
-        LST=np.append(LST,columns[6])
+        LST=np.append(LST,float(columns[7]))
         
     readfile.close()
         
     #We want to throw out data points which are too far off
     #Not active right now
-    boolarray_ha=np.abs(ha_calc-ha_obs)<0.14
-    boolarray_dec=np.abs(dec_calc-dec_obs)<0.14
+    boolarray_ha=np.abs(ha_calc-ha_obs)<0.08
+    boolarray_dec=np.abs(dec_calc-dec_obs)<0.08*15
     boolarray=np.logical_and(boolarray_ha,boolarray_dec)
+    
+    print(str(np.sum(boolarray))+' from '+str(len(boolarray))+' remaining')
         
     HIPnr=HIPnr[boolarray]
     ha_calc=ha_calc[boolarray]

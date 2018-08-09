@@ -161,7 +161,8 @@ for index in range(len(ha_calc_topo)):
     #Calculate corrected coordinates for every topocentric coordinates
     (ha_calc_corr[index],
      dec_calc_corr[index])=calculate_apparent_pos_from_true_pos(ha_calc_topo[index],
-                                                                dec_calc_topo[index])
+                                                                dec_calc_topo[index],
+                                                                temp=25)
         
 #With Refraction Correction
 #Store results in a file
