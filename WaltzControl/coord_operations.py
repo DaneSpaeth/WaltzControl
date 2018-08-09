@@ -466,6 +466,12 @@ def calculate_refraction_from_true_coord(ha,dec,temp=10,press=101.0):
        Input: True ha in hours, dec in degrees. Temp in degrees Celsius.
               Pressure in kPa.
        Output: Refraction correction in arcminutes.
+       
+       The term true coordinates stems from the Wikipedia article about
+       astronomical refraction. i am not completely sure, whether it is
+       the same thing P. Wallace cals the topocentric place. 
+       If so the apparent coordinates would translate to the observed place.
+       I should look into this and change the variable names if it it correct.
     """
     #Calculate altitude and azimuth
     alt,az,_,__=equ_to_altaz(ha,dec)
@@ -482,6 +488,12 @@ def calculate_refraction_from_apparent_coord(ha,dec,temp=10,press=101.0):
        Input: Apparent ha in hours, dec in degrees. Temp in degrees Celsius.
               Pressure in kPa.
        Output: Refraction correction in arcminutes.
+       
+       The term true coordinates stems from the Wikipedia article about
+       astronomical refraction. i am not completely sure, whether it is
+       the same thing P. Wallace cals the topocentric place. 
+       If so the apparent coordinates would translate to the observed place.
+       I should look into this and change the variable names if it it correct.
     """
     #Calculate altitude and azimuth
     alt,az,_,__=equ_to_altaz(ha,dec)
@@ -500,6 +512,12 @@ def calculate_apparent_pos_from_true_pos(ha_true,dec_true,
        Input: True ha in hours, dec in degrees. Temp in degrees Celsius.
               Pressure in kPa.
        Output: Apparent ha in hours, dec in degrees.
+       
+       The term true coordinates stems from the Wikipedia article about
+       astronomical refraction. i am not completely sure, whether it is
+       the same thing P. Wallace cals the topocentric place. 
+       If so the apparent coordinates would translate to the observed place.
+       I should look into this and change the variable names if it it correct.
     """
     #Calculate true alt and az
     alt_true,az_true,_,__=equ_to_altaz(ha_true,dec_true)
