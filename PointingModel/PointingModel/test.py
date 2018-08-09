@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import hipparcos
 from skyfield.api import utc
 from skyfield.api import Star, load
@@ -109,8 +107,10 @@ t=ts.now()
 elong=8.724700212478638/360*2*math.pi
 
 julian_dates=np.array([])
-ra_calc_topo=np.zeros(len(LST_float))
-dec_calc_topo=np.zeros(len(LST_float))
+ra_calc=np.zeros(len(LST_float))
+dec_calc=np.zeros(len(LST_float))
+ra_calc_uncorr=np.zeros(len(LST_float))
+dec_calc_uncorr=np.zeros(len(LST_float))
 
 
 for index in range(len(LST_float)):
@@ -144,67 +144,32 @@ for index in range(len(LST_float)):
     #RA,DEC,Dist of refraction corrected positions
     
     #ra_calc and dec_calc contain all the info needed for the pointing model
-    ra_calc_topo[index]=ra.hours
-    dec_calc_topo[index]=dec.degrees
+    ra_topo[index]=ra.hours
+    dec_topo[index]=dec.degrees
+ 
     
 #Compute hour angles, it should be in the interval [-12,12]
 ha_obs=LST_float-ra_obs
 ha_obs=ha_obs+24*(ha_obs<-12.)-24*(ha_obs>12.)
-ha_calc_topo=LST_float-ra_calc_topo
-ha_calc_topo=ha_calc_topo+24*(ha_calc_topo<-12.)-24*(ha_calc_topo>12.)
+ha_calc=LST_float-ra_calc
+ha_calc=ha_calc+24*(ha_calc<-12.)-24*(ha_calc>12.)
 
-#Compute refraction corrected hour angles and declinations
-#Fuirst define empty arrays
-ha_calc_corr=np.zeros(len(ha_calc_topo))
-dec_calc_corr=np.zeros(len(ha_calc_topo))
-for index in range(len(ha_calc_topo)):
-    #Calculate corrected coordinates for every topocentric coordinates
+#hour angles for uncorrected coordinates
+ha_calc_uncorr=LST_float-ra_calc_uncorr
+ha_calc_uncorr=(ha_calc_uncorr+
+                24*(ha_calc_uncorr<-12.)-
+                24*(ha_calc_uncorr>12.))
+
+ha_calc_corr=np.zeros(len(ha_calc))
+dec_calc_corr=np.zeros(len(ha_calc))
+for index in range(len(ha_calc)):
     (ha_calc_corr[index],
-     dec_calc_corr[index])=calculate_apparent_pos_from_true_pos(ha_calc_topo[index],
-                                                                dec_calc_topo[index])
-        
-#With Refraction Correction
-#Store results in a file
-writefilename=parrent_path / 'data' / 'pointing_stars_coordinates_18july2018.txt'
-writefile=open(writefilename,'w')
-writefile.truncate()
-writefile.write('HIP'+'\t'+
-                'ha_calc'+'\t'+
-                'ha_obs'+'\t'+
-                'dec_calc'+'\t'+
-                'dec_obs'+'\t'+
-                'Date'+'\t'+
-                'LST'+'\n')
-for index in range(len(HIPnr)):
-    writefile.write(HIPnr[index]+'\t'+
-                    str(ha_calc_corr[index])+'\t'+
-                    str(ha_obs[index])+'\t'+
-                    str(dec_calc_corr[index])+'\t'+
-                    str(dec_obs[index])+'\t'+
-                    str(Date[index])+'\t'+
-                    str(LST_float[index])+'\n')
-writefile.close()
+     dec_calc_corr[index])=calculate_apparent_pos_from_true_pos(ha_calc_uncorr[index],
+                                                                dec_calc_uncorr[index])
+     
 
-#Without Refraction Correction
-#Store results in a file
-writefilename=(parrent_path / 
-               'data' / 
-               'pointing_stars_coordinates_without_refr_corr_18july2018.txt')
-writefile=open(writefilename,'w')
-writefile.truncate()
-writefile.write('HIP'+'\t'+
-                'ha_calc_uncorr'+'\t'+
-                'ha_obs'+'\t'+
-                'dec_calc_uncorr'+'\t'+
-                'dec_obs'+'\t'+
-                'Date'+'\t'+
-                'LST'+'\n')
-for index in range(len(HIPnr)):
-    writefile.write(HIPnr[index]+'\t'+
-                    str(ha_calc_topo[index])+'\t'+
-                    str(ha_obs[index])+'\t'+
-                    str(dec_calc_topo[index])+'\t'+
-                    str(dec_obs[index])+'\t'+
-                    str(Date[index])+'\t'+
-                    str(LST_float[index])+'\n')
-writefile.close()
+    
+    
+        
+        
+

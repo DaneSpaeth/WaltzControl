@@ -109,8 +109,10 @@ t=ts.now()
 elong=8.724700212478638/360*2*math.pi
 
 julian_dates=np.array([])
-ra_calc_topo=np.zeros(len(LST_float))
-dec_calc_topo=np.zeros(len(LST_float))
+ra_calc=np.zeros(len(LST_float))
+dec_calc=np.zeros(len(LST_float))
+ra_calc_uncorr=np.zeros(len(LST_float))
+dec_calc_uncorr=np.zeros(len(LST_float))
 
 
 for index in range(len(LST_float)):
@@ -136,32 +138,34 @@ for index in range(len(LST_float)):
     #Compute astrometric and apparent coordinates for Waltz at time t 
     astrometric= waltz.at(t).observe(stars)
     apparent= astrometric.apparent()
-    
-    #Calculate topocentric place 
-    #(From apparent coordinates account for diurnal abberation but not for refraction)
-    ra,dec,distance =apparent.radec(epoch='date')
+    #Change to alt, az coordinates to compute refraction correction,
+    #then change back again
+    #Change Temp and pressure
+    alt, az, distancealt= apparent.altaz(temperature_C=15.0, pressure_mbar=1005.0)
+    corrected=apparent.from_altaz(alt=alt, az=az)
     
     #RA,DEC,Dist of refraction corrected positions
+    ra,dec, distance=corrected.radec()
     
     #ra_calc and dec_calc contain all the info needed for the pointing model
-    ra_calc_topo[index]=ra.hours
-    dec_calc_topo[index]=dec.degrees
+    ra_calc[index]=ra.hours
+    dec_calc[index]=dec.degrees
+    #RA,DEC,Dist of refraction uncorrected positions
+    ra_uncorr,dec_uncorr,distance_uncorr =apparent.radec(epoch='date')
+    ra_calc_uncorr[index]=ra_uncorr.hours
+    dec_calc_uncorr[index]=dec_uncorr.degrees
     
 #Compute hour angles, it should be in the interval [-12,12]
 ha_obs=LST_float-ra_obs
 ha_obs=ha_obs+24*(ha_obs<-12.)-24*(ha_obs>12.)
-ha_calc_topo=LST_float-ra_calc_topo
-ha_calc_topo=ha_calc_topo+24*(ha_calc_topo<-12.)-24*(ha_calc_topo>12.)
+ha_calc=LST_float-ra_calc
+ha_calc=ha_calc+24*(ha_calc<-12.)-24*(ha_calc>12.)
 
-#Compute refraction corrected hour angles and declinations
-#Fuirst define empty arrays
-ha_calc_corr=np.zeros(len(ha_calc_topo))
-dec_calc_corr=np.zeros(len(ha_calc_topo))
-for index in range(len(ha_calc_topo)):
-    #Calculate corrected coordinates for every topocentric coordinates
-    (ha_calc_corr[index],
-     dec_calc_corr[index])=calculate_apparent_pos_from_true_pos(ha_calc_topo[index],
-                                                                dec_calc_topo[index])
+#hour angles for uncorrected coordinates
+ha_calc_uncorr=LST_float-ra_calc_uncorr
+ha_calc_uncorr=(ha_calc_uncorr+
+                24*(ha_calc_uncorr<-12.)-
+                24*(ha_calc_uncorr>12.))
         
 #With Refraction Correction
 #Store results in a file
@@ -177,9 +181,9 @@ writefile.write('HIP'+'\t'+
                 'LST'+'\n')
 for index in range(len(HIPnr)):
     writefile.write(HIPnr[index]+'\t'+
-                    str(ha_calc_corr[index])+'\t'+
+                    str(ha_calc[index])+'\t'+
                     str(ha_obs[index])+'\t'+
-                    str(dec_calc_corr[index])+'\t'+
+                    str(dec_calc[index])+'\t'+
                     str(dec_obs[index])+'\t'+
                     str(Date[index])+'\t'+
                     str(LST_float[index])+'\n')
@@ -201,9 +205,9 @@ writefile.write('HIP'+'\t'+
                 'LST'+'\n')
 for index in range(len(HIPnr)):
     writefile.write(HIPnr[index]+'\t'+
-                    str(ha_calc_topo[index])+'\t'+
+                    str(ha_calc_uncorr[index])+'\t'+
                     str(ha_obs[index])+'\t'+
-                    str(dec_calc_topo[index])+'\t'+
+                    str(dec_calc_uncorr[index])+'\t'+
                     str(dec_obs[index])+'\t'+
                     str(Date[index])+'\t'+
                     str(LST_float[index])+'\n')
