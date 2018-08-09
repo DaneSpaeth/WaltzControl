@@ -494,12 +494,4 @@ def calculate_refraction_from_apparent_coord(ha,dec,temp=10,press=101.0):
     
     return R
     
-dec=np.arange(-41,49)
-ha=np.zeros(len(dec))
-R=np.zeros(len(dec))
-
-for index in range(len(dec)):
-    R[index]=calculate_refraction_from_true_coord(ha[index],dec[index])
-plt.plot(dec,R)
-plt.show()
 
