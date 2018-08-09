@@ -52,7 +52,8 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
    
     # take differences of coordinates (pointing displacements)
    
-    #We want to be able to specify a certain Date of Observation and need to mask
+    #We want to be able to specify a certain 
+    #Date of Observation and need to mask
     #the arrays for this purpose
     if ObservationDate != 'all':
         ha_calc=ha_calc[Date==ObservationDate]
@@ -127,19 +128,25 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             #We calculate the Value of IH at each Date
             #Negative IH means that observed coordinates are greater 
             #than calculated coordinates
-            val_error=(np.std(ha_diff[Date==element])/(math.sqrt(len(ha_diff[Date==element]))))
+            val_error=(np.std(ha_diff[Date==element])/
+                       (math.sqrt(len(ha_diff[Date==element]))))
             #Calculating the error as error of the mean
            
-            ###ha_corr needs to be changed each index individually since we want to have just one corrected ha in the end
-            ha_corr = ha_corr-val*(Date==element) #We correct ha at each date
-            ha_corr_error=np.sqrt(np.square(ha_corr_error)+np.square(val_error*(Date==element)))
+            ###ha_corr needs to be changed each index individually 
+            #since we want to have just one corrected ha in the end
+            #We correct ha at each date
+            ha_corr = ha_corr-val*(Date==element) 
+            ha_corr_error=np.sqrt(np.square(ha_corr_error)+
+                                  np.square(val_error*(Date==element)))
             print('IH[h] at',element,'=',round(val,4),'+-',round(val_error,4))
            
            #Fitting ID analogously
             val = -np.mean(dec_diff[Date==element])
-            val_error=np.std(dec_diff[Date==element])/(math.sqrt(len(dec_diff[Date==element])))
+            val_error=(np.std(dec_diff[Date==element])/
+                       (math.sqrt(len(dec_diff[Date==element]))))
             dec_corr = dec_corr-val*(Date==element)
-            dec_corr_error=np.sqrt(np.square(dec_corr_error)+np.square(val_error*(Date==element)))
+            dec_corr_error=(np.sqrt(np.square(dec_corr_error)+
+                                    np.square(val_error*(Date==element))))
             print('ID[°] at',element,'=',round(val,4),'+-',round(val_error,4))
            
     #Calculate new corrected differences between observed coordinates and corrected calculated coordinates        
@@ -147,8 +154,10 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
     dec_diff_corr = dec_obs - dec_corr
     
     
-    ha_diff_corr_error=np.sqrt(np.square(ha_obs_error)+np.square(ha_corr_error))
-    dec_diff_corr_error=np.sqrt(np.square(dec_obs_error)+np.square(dec_corr_error))
+    ha_diff_corr_error=np.sqrt(np.square(ha_obs_error)+
+                               np.square(ha_corr_error))
+    dec_diff_corr_error=np.sqrt(np.square(dec_obs_error)+
+                                np.square(dec_corr_error))
     
     #To avoid to correct twice (want intital values for ha_corr in second correction) (need it in MA, ME and all)
     dec_corr_first=dec_corr
@@ -159,8 +168,10 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
    
    #Fitting following Numerical Recipes by W. H. Press page 781 f.
     if term == 'CH' or term== 'all':
-        sxx = sum((1/(np.cos(np.radians(dec_corr_first))))**2*1/(ha_diff_corr_error)**2)
-        sxy = sum(ha_diff_corr*(1/np.cos(np.radians(dec_corr_first)))*1/(ha_diff_corr_error)**2)
+        sxx = sum((1/(np.cos(np.radians(dec_corr_first))))**2*
+                  1/(ha_diff_corr_error)**2)
+        sxy = sum(ha_diff_corr*(1/np.cos(np.radians(dec_corr_first)))*
+                  1/(ha_diff_corr_error)**2)
         
         val = sxy/sxx
         CH=val
@@ -172,9 +183,11 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         CH_error=s/Delta
         
         #First calculate the error
-        ha_corr_error=np.sqrt((ha_corr_error_first)**2+\
-                              (1/np.cos(np.radians(dec_corr_first))*CH_error)**2+\
-                              (val/(np.cos(np.radians(dec_corr_first)))**2*np.sin(np.radians(dec_corr_first))*dec_corr_error_first/15.)**2)
+        ha_corr_error=np.sqrt((ha_corr_error_first)**2+
+                              (1/np.cos(np.radians(dec_corr_first))*CH_error)**2+
+                              (val/(np.cos(np.radians(dec_corr_first)))**2*
+                               np.sin(np.radians(dec_corr_first))*
+                               dec_corr_error_first/15.)**2)
         #Need that for 'all'
         ha_corr_error_CH=ha_corr_error
         #Calculating the corrected coordinates
@@ -184,8 +197,10 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         print('CH[h]=',val,'+-',CH_error)
       
     if term == 'NP' or term =='all':
-        sxx = sum(np.tan(np.radians(dec_corr_first))**2*1/(ha_diff_corr_error)**2)
-        sxy = sum(ha_diff_corr*np.tan(np.radians(dec_corr_first))*1/(ha_diff_corr_error)**2)
+        sxx = sum(np.tan(np.radians(dec_corr_first))**2*
+                  1/(ha_diff_corr_error)**2)
+        sxy = sum(ha_diff_corr*np.tan(np.radians(dec_corr_first))*
+                  1/(ha_diff_corr_error)**2)
 
         val = sxy/sxx
         NP=val
@@ -197,9 +212,10 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         NP_error=s/Delta
         
         #First calculate the error
-        ha_corr_error=np.sqrt((ha_corr_error_first)**2+\
-                              (np.tan(np.radians(dec_corr_first))*NP_error)**2+\
-                              (val/(np.cos(np.radians(dec_corr_first)))**2*dec_corr_error_first/15.)**2)
+        ha_corr_error=np.sqrt((ha_corr_error_first)**2+
+                              (np.tan(np.radians(dec_corr_first))*NP_error)**2+
+                              (val/(np.cos(np.radians(dec_corr_first)))**2*
+                               dec_corr_error_first/15.)**2)
         #Need that for 'all'
         ha_corr_error_NP=ha_corr_error
         
@@ -210,24 +226,37 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
       
     if term == 'MA'or term =='all':
         
-        #We calculate MA and Me in degree. For that reason we introduce a factor of 15 in all calculations with hour angles
-        #It would look nicer if we would make this calculation just once in the beginning
+        #We calculate MA and Me in degree. 
+        #For that reason we introduce a factor of 15 
+        #in all calculations with hour angles
+        #It would look nicer 
+        #if we would make this calculation just once in the beginning
         
-        sxxh = sum((-np.cos(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first)))**2*1/(ha_diff_corr_error*15.)**2)
-        sxyh = sum((ha_diff_corr*15)*(-np.cos(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first)))*1/(ha_diff_corr_error*15.)**2)
+        sxxh = sum((-np.cos(np.radians(ha_corr_first*15.))*
+                    np.tan(np.radians(dec_corr_first)))**2*
+                    1/(ha_diff_corr_error*15.)**2)
+        sxyh = sum((ha_diff_corr*15)*
+                   (-np.cos(np.radians(ha_corr_first*15.))*
+                    np.tan(np.radians(dec_corr_first)))*
+                   1/(ha_diff_corr_error*15.)**2)
 
-        sxxd = sum((np.sin(np.radians(15.*ha_corr_first)))**2*1/(dec_diff_corr_error)**2)
-        sxyd = sum(dec_diff_corr*(np.sin(np.radians(15.*ha_corr_first)))*1/(dec_diff_corr_error)**2)
+        sxxd = sum((np.sin(np.radians(15.*ha_corr_first)))**2*
+                   1/(dec_diff_corr_error)**2)
+        sxyd = sum(dec_diff_corr*(np.sin(np.radians(15.*ha_corr_first)))*
+                   1/(dec_diff_corr_error)**2)
 
         val = (sxyh+sxyd)/(sxxh+sxxd)
         MA=val
         #For calculating the error
         
         sh=sum(1/(ha_diff_corr_error*15.)**2)
-        sxh=sum(-np.cos(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first))/(ha_diff_corr_error*15.)**2)
+        sxh=sum(-np.cos(np.radians(ha_corr_first*15.))*
+                np.tan(np.radians(dec_corr_first))/
+                (ha_diff_corr_error*15.)**2)
         
         sd=sum(1/(dec_diff_corr_error)**2)
-        sxd=sum(np.sin(np.radians(15.*ha_corr_first))/(dec_diff_corr_error)**2)
+        sxd=sum(np.sin(np.radians(15.*ha_corr_first))/
+                (dec_diff_corr_error)**2)
         
         s=sh+sd
         sx=sxh+sxd
@@ -239,36 +268,58 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         
         #Calculate corrected HA and DEC and their errors
         
-        ha_corr = ha_corr_first-val/15.*np.cos(np.radians(15.*ha_corr_first))*np.tan(np.radians(dec_corr_first))
+        ha_corr = (ha_corr_first-
+                   val/15.*
+                   np.cos(np.radians(15.*ha_corr_first))*
+                   np.tan(np.radians(dec_corr_first)))
         dec_corr = dec_corr_first+val*np.sin(np.radians(ha_corr_first*15.))
         
-        ha_corr_error=np.sqrt(ha_corr_error_first**2+\
-                             (-np.cos(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first))*MA_error/15.)**2+\
-                             (val/15.*np.sin(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first))*ha_corr_error_first)**2+\
-                             (-val/15.*np.cos(np.radians(ha_corr_first*15.))*1/(np.cos(np.radians(dec_corr_first)))**2*dec_corr_error_first/15.)**2)
+        ha_corr_error=np.sqrt(ha_corr_error_first**2+
+                             (-np.cos(np.radians(ha_corr_first*15.))*
+                              np.tan(np.radians(dec_corr_first))*
+                              MA_error/15.)**2+
+                             (val/15.*
+                              np.sin(np.radians(ha_corr_first*15.))*
+                              np.tan(np.radians(dec_corr_first))*
+                              ha_corr_error_first)**2+
+                             (-val/15.*
+                              np.cos(np.radians(ha_corr_first*15.))*
+                              1/(np.cos(np.radians(dec_corr_first)))**2*
+                              dec_corr_error_first/15.)**2)
         ha_corr_error_MA=ha_corr_error
         
-        dec_corr_error=np.sqrt((dec_corr_error_first)**2+\
-                              (np.sin(np.radians(ha_corr_first*15.))*MA_error)**2+\
-                              (val*np.cos(np.radians(ha_corr_first*15.))*ha_corr_error_first*15.)**2)
+        dec_corr_error=np.sqrt((dec_corr_error_first)**2+
+                              (np.sin(np.radians(ha_corr_first*15.))*
+                               MA_error)**2+
+                              (val*np.cos(np.radians(ha_corr_first*15.))*
+                               ha_corr_error_first*15.)**2)
         dec_corr_error_MA=dec_corr_error
         
         print('MA[°]=',val,'+-',MA_error)
    
     if term == 'ME' or term =='all':
 
-        sxxh = sum((np.sin(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first)))**2*1/(ha_diff_corr_error*15.)**2)
-        sxyh = sum((ha_diff_corr*15)*(np.sin(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first)))*1/(ha_diff_corr_error*15.)**2)
+        sxxh = sum((np.sin(np.radians(ha_corr_first*15.))*
+                    np.tan(np.radians(dec_corr_first)))**2*
+                    1/(ha_diff_corr_error*15.)**2)
+        sxyh = sum((ha_diff_corr*15)*
+                   (np.sin(np.radians(ha_corr_first*15.))*
+                    np.tan(np.radians(dec_corr_first)))*
+                   1/(ha_diff_corr_error*15.)**2)
 
-        sxxd = sum(np.cos(np.radians(ha_corr_first*15.))**2*1/(dec_diff_corr_error)**2)
-        sxyd = sum(dec_diff_corr*np.cos(np.radians(ha_corr_first*15.))*1/(dec_diff_corr_error)**2)
+        sxxd = sum(np.cos(np.radians(ha_corr_first*15.))**2*
+                   1/(dec_diff_corr_error)**2)
+        sxyd = sum(dec_diff_corr*np.cos(np.radians(ha_corr_first*15.))*
+                   1/(dec_diff_corr_error)**2)
 
         val = (sxyh+sxyd)/(sxxh+sxxd)
         ME=val
         #For calculating the error
         
         sh=sum(1/(ha_diff_corr_error*15.)**2)
-        sxh=sum(np.sin(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first))/(ha_diff_corr_error*15.)**2)
+        sxh=sum(np.sin(np.radians(ha_corr_first*15.))*
+                np.tan(np.radians(dec_corr_first))/
+                (ha_diff_corr_error*15.)**2)
         
         sd=sum(1/(dec_diff_corr_error)**2)
         sxd=sum(np.cos(np.radians(15.*ha_corr_first))/(dec_diff_corr_error)**2)
@@ -283,18 +334,29 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
                
         #Calculate corrected HA and DEC and their errors
         
-        ha_corr = ha_corr_first+val/15*np.sin(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first))
+        ha_corr = (ha_corr_first+
+                   val/15*
+                   np.sin(np.radians(ha_corr_first*15.))*
+                   np.tan(np.radians(dec_corr_first)))
         dec_corr = dec_corr_first+val*np.cos(np.radians(ha_corr_first*15.))
         
-        ha_corr_error=np.sqrt(ha_corr_error_first**2+\
-                             (np.sin(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first))*ME_error/15.)**2+\
-                             (val/15.*np.cos(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first))*ha_corr_error_first)**2+\
-                             (val/15.*np.sin(np.radians(ha_corr_first*15.))*1/(np.cos(np.radians(dec_corr_first)))**2*dec_corr_error_first/15.)**2)
+        ha_corr_error=np.sqrt(ha_corr_error_first**2+
+                             (np.sin(np.radians(ha_corr_first*15.))*
+                              np.tan(np.radians(dec_corr_first))*
+                              ME_error/15.)**2+
+                             (val/15.*np.cos(np.radians(ha_corr_first*15.))*
+                              np.tan(np.radians(dec_corr_first))*
+                              ha_corr_error_first)**2+
+                             (val/15.*np.sin(np.radians(ha_corr_first*15.))*
+                              1/(np.cos(np.radians(dec_corr_first)))**2*
+                              dec_corr_error_first/15.)**2)
         ha_corr_error_ME=ha_corr_error
         
-        dec_corr_error=np.sqrt((dec_corr_error_first)**2+\
-                              (np.cos(np.radians(ha_corr_first*15.))*ME_error)**2+\
-                              (-val*np.sin(np.radians(ha_corr_first*15.))*ha_corr_error_first*15.)**2)
+        dec_corr_error=np.sqrt((dec_corr_error_first)**2+
+                              (np.cos(np.radians(ha_corr_first*15.))*
+                               ME_error)**2+
+                              (-val*np.sin(np.radians(ha_corr_first*15.))*
+                               ha_corr_error_first*15.)**2)
         dec_corr_error_ME=dec_corr_error
         
     
@@ -302,24 +364,26 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         print('ME[°]=',val,'+-',ME_error)
       
     if term == 'all':
-        ha_corr = (ha_corr_first+\
-                  CH/np.cos(np.radians(dec_corr_first))+\
-                  NP*np.tan(np.radians(dec_corr_first))+\
-                  -MA/15.*np.cos(np.radians(15.*ha_corr_first))*np.tan(np.radians(dec_corr_first))+\
-                  ME/15*np.sin(np.radians(ha_corr_first*15.))*np.tan(np.radians(dec_corr_first)))
+        ha_corr = (ha_corr_first+
+                  CH/np.cos(np.radians(dec_corr_first))+
+                  NP*np.tan(np.radians(dec_corr_first))+
+                  -MA/15.*np.cos(np.radians(15.*ha_corr_first))*
+                  np.tan(np.radians(dec_corr_first))+
+                  ME/15*np.sin(np.radians(ha_corr_first*15.))*
+                  np.tan(np.radians(dec_corr_first)))
         
-        ha_corr_error=np.sqrt(ha_corr_error_first**2+\
-                              ha_corr_error_CH**2+\
-                              ha_corr_error_NP**2+\
-                              ha_corr_error_MA**2+\
+        ha_corr_error=np.sqrt(ha_corr_error_first**2+
+                              ha_corr_error_CH**2+
+                              ha_corr_error_NP**2+
+                              ha_corr_error_MA**2+
                               ha_corr_error_ME**2)
         
-        dec_corr=(dec_corr_first+\
-                 MA*np.sin(np.radians(ha_corr_first*15.))+\
+        dec_corr=(dec_corr_first+
+                 MA*np.sin(np.radians(ha_corr_first*15.))+
                  val*np.cos(np.radians(ha_corr_first*15.)))
         
-        dec_corr_error=np.sqrt(dec_corr_error_first**2+\
-                              dec_corr_error_MA**2+\
+        dec_corr_error=np.sqrt(dec_corr_error_first**2+
+                              dec_corr_error_MA**2+
                               dec_corr_error_ME**2)
     
       #Second array of differences with second corrections
@@ -356,9 +420,11 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         plt.legend(loc='best',numpoints=1)
       
         plt.show()
-        #We also want to plot ha_diff and dec_diff vs ha and dec (for the moment ha_obs and dec_obs)
+        #We also want to plot ha_diff and dec_diff 
+        #vs ha and dec (for the moment ha_obs and dec_obs)
       
-        #At first we create data to plot the Field of View of the Guidung Camera
+        #At first we create data 
+        #to plot the Field of View of the Guidung Camera
         ha_space=np.linspace(ha_obs.min(),ha_obs.max())
         dec_space=np.linspace(dec_obs.min(),dec_obs.max())
         #If we only observe a specific date then we don't need to do much
@@ -369,22 +435,26 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
           #Plotting the original differences
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(ha_obs,ha_diff,yerr=ha_diff_error,linestyle='none',marker='o',label=ObservationDate)
+            plt.errorbar(ha_obs,ha_diff,yerr=ha_diff_error,
+                         linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
             plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
-            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+                     color='black',label='FOV')
             plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
           
           #Plotting the IH corrected differences
             plt.subplot(222)
-            plt.errorbar(ha_obs,ha_diff_corr,yerr=ha_diff_corr_error,linestyle='none',marker='o',label=ObservationDate)
+            plt.errorbar(ha_obs,ha_diff_corr,yerr=ha_diff_corr_error,
+                         linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
             plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
-            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+                     color='black',label='FOV')
             plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
@@ -392,11 +462,14 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             #Plotting the second correction if the folowing terms are chosen 
             if term == 'CH' or term =='NP' or term =='MA' or term == 'ME'or term =='all' :
                 plt.subplot(224)
-                plt.errorbar(ha_obs,ha_diff_corr_sec,yerr=ha_diff_corr_sec_error,linestyle='none',marker='o',label=ObservationDate)
+                plt.errorbar(ha_obs,ha_diff_corr_sec,
+                             yerr=ha_diff_corr_sec_error,
+                             linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed hour angle [h]')
                 plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
                 plt.title('Second Correction')
-                plt.plot(ha_space,0.0022*np.ones(len(ha_space)),color='black',label='FOV')
+                plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+                         color='black',label='FOV')
                 plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
@@ -405,32 +478,43 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         ### HA_Diff vs. DEC_Obs ###
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(dec_obs, ha_diff,yerr=ha_diff_error,linestyle='none',marker='o', label=ObservationDate)
+            plt.errorbar(dec_obs, ha_diff,yerr=ha_diff_error,
+                         linestyle='none',marker='o', label=ObservationDate)
             plt.xlabel('observed declination [°]')
             plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
-            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
             
             plt.subplot(222)
-            plt.errorbar(dec_obs, ha_diff_corr,yerr=ha_diff_corr_error, linestyle='none',marker='o',label=ObservationDate)
+            plt.errorbar(dec_obs, ha_diff_corr,yerr=ha_diff_corr_error,
+                         linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed declination [°]')
             plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
-            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
             
             #Second Correction: Plot only in these cases
-            if term == 'CH' or term =='NP' or term =='MA' or term == 'ME' or term =='all':    
+            if (term == 'CH' or 
+                term =='NP' or 
+                term =='MA' or 
+                term == 'ME' or 
+                term =='all'):    
                 plt.subplot(224)
-                plt.errorbar(dec_obs,ha_diff_corr_sec,yerr=ha_diff_corr_error,linestyle='none',marker='o',label=ObservationDate)
+                plt.errorbar(dec_obs,ha_diff_corr_sec,yerr=ha_diff_corr_error,
+                             linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed declination[°]')
                 plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
                 plt.title('Second Correction')
-                plt.plot(dec_space,0.0022*np.ones(len(dec_space)),color='black',label='FOV')
-                plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
+                plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+                         color='black',label='FOV')
+                plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),
+                         color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
           
@@ -439,19 +523,23 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(ha_obs,dec_diff,yerr=dec_diff_error,linestyle='none',marker='o',label=ObservationDate)
+            plt.errorbar(ha_obs,dec_diff,yerr=dec_diff_error,
+                         linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
             plt.ylabel('dec_diff = dec_obs-dec_calc [°]')
-            plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.033*np.ones(len(ha_space)),
+                     color='black',label='FOV')
             plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
             
             plt.subplot(222)
-            plt.errorbar(ha_obs,dec_diff_corr,yerr=dec_diff_corr_error,linestyle='none',marker='o',label=ObservationDate)
+            plt.errorbar(ha_obs,dec_diff_corr,yerr=dec_diff_corr_error,
+                         linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
             plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
-            plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',
+                     label='FOV')
             plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
@@ -460,11 +548,14 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             #Second Correction: Plot only in these cases
             if term =='MA' or term == 'ME'or term =='all':
                 plt.subplot(224)
-                plt.errorbar(ha_obs,dec_diff_corr_sec,yerr=dec_diff_corr_sec_error,linestyle='none',marker='o',label=ObservationDate)
+                plt.errorbar(ha_obs,dec_diff_corr_sec,
+                             yerr=dec_diff_corr_sec_error,
+                             linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed hour angle [h]')
                 plt.ylabel('dec_diff_corr_sec = dec_obs-dec_corr [°]')
                 plt.title('Second Correction')
-                plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',label='FOV')
+                plt.plot(ha_space,0.033*np.ones(len(ha_space)),
+                         color='black',label='FOV')
                 plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
@@ -474,19 +565,23 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
         
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(dec_obs,dec_diff,yerr=dec_diff_error,linestyle='none',marker='o',label=ObservationDate)
+            plt.errorbar(dec_obs,dec_diff,yerr=dec_diff_error,
+                         linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed declination [°]')
             plt.ylabel('dec_diff = dec_obs-dec_calc [°]')
-            plt.plot(dec_space,0.033*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('Initial Data')
             
             plt.subplot(222)
-            plt.errorbar(dec_obs,dec_diff_corr,yerr=dec_diff_corr_error,linestyle='none',marker='o',label=ObservationDate)
+            plt.errorbar(dec_obs,dec_diff_corr,yerr=dec_diff_corr_error,
+                         linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed declination [°]')
             plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
-            plt.plot(dec_space,0.033*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.title('First Correction')
@@ -495,12 +590,15 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             #Second Correction: Plot only in these cases
             if term =='MA' or term == 'ME'or term =='all':
                 plt.subplot(224)
-                plt.errorbar(dec_obs,dec_diff_corr,yerr=dec_diff_error,linestyle='none',marker='o',label=ObservationDate)
+                plt.errorbar(dec_obs,dec_diff_corr,yerr=dec_diff_error,
+                             linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed declination [°]')
                 plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
                 plt.title('Second correction')
-                plt.plot(dec_space,0.033*np.ones(len(dec_space)),color='black',label='FOV')
-                plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
+                plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+                         color='black',label='FOV')
+                plt.plot(dec_space,-0.033*np.ones(len(dec_space)),
+                         color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
             
@@ -509,7 +607,8 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             #Initital Data
             plt.figure()
             plt.subplot(221)
-            plt.errorbar(dec_diff,15.*ha_diff,linestyle='none',marker='.',label=ObservationDate)
+            plt.errorbar(dec_diff,15.*ha_diff,linestyle='none',
+                         marker='.',label=ObservationDate)
             fig = plt.gcf()
             ax = fig.gca()
         
@@ -524,7 +623,8 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             
             #First correction
             plt.subplot(222)
-            plt.errorbar(dec_diff_corr,15.*ha_diff_corr,linestyle='none',marker='.',label=ObservationDate)
+            plt.errorbar(dec_diff_corr,15.*ha_diff_corr,
+                         linestyle='none',marker='.',label=ObservationDate)
             fig = plt.gcf()
             ax = fig.gca()
         
@@ -538,7 +638,8 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             
             #Second Correction
             plt.subplot(224)
-            plt.errorbar(dec_diff_corr_sec,15.*ha_diff_corr_sec,linestyle='none',marker='.',label=ObservationDate)
+            plt.errorbar(dec_diff_corr_sec,15.*ha_diff_corr_sec,
+                         linestyle='none',marker='.',label=ObservationDate)
             fig = plt.gcf()
             ax = fig.gca()
         
@@ -551,42 +652,60 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
             
-        else: #If we have all dates than we want to plot each date with a different color
-        #unique makes an array of dates where each date only appears once, so looping over this array
-        #and plotting all elements where the original date array is the unique date leads to different colors
+        else: 
+        #If we have all dates than we want to plot each date 
+        #with a different color
+        #unique makes an array of dates 
+        #where each date only appears once, so looping over this array
+        #and plotting all elements where the original date array 
+        #is the unique date leads to different colors
           
             ### HA_DIFF VS- HA_OBS ###
             plt.figure()
             plt.subplot(221)
             for element in np.unique(Date): 
-                plt.errorbar(ha_obs[Date==element],ha_diff[Date==element],yerr=ha_diff_error[Date==element],linestyle='none',marker='.',label=element)
+                plt.errorbar(ha_obs[Date==element],ha_diff[Date==element],
+                             yerr=ha_diff_error[Date==element],
+                             linestyle='none',marker='.',label=element)
             plt.xlabel('observed hour angle [h]')#
             plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
             plt.title('Initial Data')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
-            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+                     color='black',label='FOV')
             plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             
             plt.subplot(222)
             for element in np.unique(Date): 
-                plt.errorbar(ha_obs[Date==element],ha_diff_corr[Date==element],yerr=ha_diff_corr_error[Date==element],linestyle='none',marker='o',label=element)
+                plt.errorbar(ha_obs[Date==element],ha_diff_corr[Date==element],
+                             yerr=ha_diff_corr_error[Date==element],
+                             linestyle='none',marker='o',label=element)
             plt.xlabel('observed hour angle [h]')
             plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
             plt.title('First correction')
-            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+                     color='black',label='FOV')
             plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
           
           #Second Correction: Plot only in these cases
-            if term == 'CH' or term =='NP' or term =='MA' or term == 'ME' or term =='all':
+            if (term == 'CH' or
+                term =='NP' or
+                term =='MA' or
+                term == 'ME' or
+                term =='all'):
                 plt.subplot(224)
                 for element in np.unique(Date): 
-                    plt.errorbar(ha_obs[Date==element],ha_diff_corr_sec[Date==element],yerr=ha_diff_corr_sec_error[Date==element],linestyle='none',marker='o',label=element)
+                    plt.errorbar(ha_obs[Date==element],
+                                 ha_diff_corr_sec[Date==element],
+                                 yerr=ha_diff_corr_sec_error[Date==element],
+                                 linestyle='none',marker='o',label=element)
                 plt.xlabel('observed hour angle [h]')
                 plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
                 plt.title('Second Correction'+' ('+term+')')
-                plt.plot(ha_space,0.0022*np.ones(len(ha_space)),color='black',label='FOV')
+                plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
+                         color='black',label='FOV')
                 plt.plot(ha_space,-0.0022*np.ones(len(ha_space)),color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
@@ -595,35 +714,51 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             plt.figure()
             plt.subplot(221)
             for element in np.unique(Date):
-                plt.errorbar(dec_obs[Date==element],ha_diff[Date==element],yerr=ha_diff_error[Date==element],linestyle='none',marker='o',label=element)
+                plt.errorbar(dec_obs[Date==element],ha_diff[Date==element],
+                             yerr=ha_diff_error[Date==element],
+                             linestyle='none',marker='o',label=element)
             plt.xlabel('observed declination [°]')
             plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
             plt.title('Initial Data')
-            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             
             plt.subplot(222)
             for element in np.unique(Date):
-                plt.errorbar(dec_obs[Date==element],ha_diff_corr[Date==element],yerr=ha_diff_corr_error[Date==element],linestyle='none',marker='o',label=element)
+                plt.errorbar(dec_obs[Date==element],
+                             ha_diff_corr[Date==element],
+                             yerr=ha_diff_corr_error[Date==element],
+                             linestyle='none',marker='o',label=element)
             plt.xlabel('observed declination [°]')
             plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
             plt.title('First correction')
-            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
           
           #Second Correction: Plot only in these cases
-            if term == 'CH' or term =='NP' or term =='MA' or term == 'ME'or term =='all' :
+            if (term == 'CH' or
+                term =='NP' or
+                term =='MA' or
+                term == 'ME'or
+                term =='all') :
                 plt.subplot(224)
                 for element in np.unique(Date): 
-                    plt.errorbar(dec_obs[Date==element],ha_diff_corr_sec[Date==element],yerr=ha_diff_corr_error[Date==element],linestyle='none',marker='o',label=element)
+                    plt.errorbar(dec_obs[Date==element],
+                                 ha_diff_corr_sec[Date==element],
+                                 yerr=ha_diff_corr_error[Date==element],
+                                 linestyle='none',marker='o',label=element)
                 plt.xlabel('observed declination[°]')
                 plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
                 plt.title('Second Correction'+' ('+term+')')
-                plt.plot(dec_space,0.0022*np.ones(len(dec_space)),color='black',label='FOV')
-                plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),color='black')
+                plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
+                         color='black',label='FOV')
+                plt.plot(dec_space,-0.0022*np.ones(len(dec_space)),
+                         color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
               
@@ -631,21 +766,29 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             plt.figure()
             plt.subplot(221)
             for element in np.unique(Date):
-                plt.errorbar(ha_obs[Date==element],dec_diff[Date==element],yerr=dec_diff_error[Date==element],linestyle='none',marker='o',label=element)
+                plt.errorbar(ha_obs[Date==element],
+                             dec_diff[Date==element],
+                             yerr=dec_diff_error[Date==element],
+                             linestyle='none',marker='o',label=element)
             plt.xlabel('observed hour angle [h]')
             plt.ylabel('dec_diff = dec_obs-dec_calc [°]')
             plt.title('Initial Data')
-            plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.033*np.ones(len(ha_space)),
+                     color='black',label='FOV')
             plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             
             plt.subplot(222)
             for element in np.unique(Date):
-                plt.errorbar(ha_obs[Date==element],dec_diff_corr[Date==element],yerr=dec_diff_corr_error[Date==element],linestyle='none',marker='o',label=element)
+                plt.errorbar(ha_obs[Date==element],
+                             dec_diff_corr[Date==element],
+                             yerr=dec_diff_corr_error[Date==element],
+                             linestyle='none',marker='o',label=element)
             plt.xlabel('observed hour angle [h]')
             plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
             plt.title('First Correction')
-            plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',label='FOV')
+            plt.plot(ha_space,0.033*np.ones(len(ha_space)),
+                     color='black',label='FOV')
             plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
           
@@ -653,11 +796,15 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             if term =='MA' or term == 'ME'or term =='all':
                 plt.subplot(224)
                 for element in np.unique(Date):
-                    plt.errorbar(ha_obs[Date==element],dec_diff_corr_sec[Date==element],yerr=dec_diff_corr_sec_error[Date==element],linestyle='none',marker='o',label=element)
+                    plt.errorbar(ha_obs[Date==element],
+                                 dec_diff_corr_sec[Date==element],
+                                 yerr=dec_diff_corr_sec_error[Date==element],
+                                 linestyle='none',marker='o',label=element)
                 plt.xlabel('observed hour angle [h]')
                 plt.ylabel('dec_diff_corr_sec = dec_obs-dec_corr [°]')
                 plt.title('Second Correction'+' ('+term+')')
-                plt.plot(ha_space,0.033*np.ones(len(ha_space)),color='black',label='FOV')
+                plt.plot(ha_space,0.033*np.ones(len(ha_space)),
+                         color='black',label='FOV')
                 plt.plot(ha_space,-0.033*np.ones(len(ha_space)),color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
@@ -666,21 +813,29 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             plt.figure()
             plt.subplot(221)
             for element in np.unique(Date):
-                plt.errorbar(dec_obs[Date==element],dec_diff[Date==element],yerr=dec_diff_error[Date==element],linestyle='none',marker='o',label=element)
+                plt.errorbar(dec_obs[Date==element],
+                             dec_diff[Date==element],
+                             yerr=dec_diff_error[Date==element],
+                             linestyle='none',marker='o',label=element)
             plt.xlabel('observed declination [°]')
             plt.ylabel('dec_diff = dec_obs-dec_calc [°]')
             plt.title('Initial Data')
-            plt.plot(dec_space,0.033*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             
             plt.subplot(222)
             for element in np.unique(Date):
-                plt.errorbar(dec_obs[Date==element],dec_diff_corr[Date==element],yerr=dec_diff_corr_error[Date==element],linestyle='none',marker='o',label=element)
+                plt.errorbar(dec_obs[Date==element],
+                             dec_diff_corr[Date==element],
+                             yerr=dec_diff_corr_error[Date==element],
+                             linestyle='none',marker='o',label=element)
             plt.xlabel('observed declination [°]')
             plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
             plt.title('First correction')
-            plt.plot(dec_space,0.033*np.ones(len(dec_space)),color='black',label='FOV')
+            plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+                     color='black',label='FOV')
             plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             
@@ -689,12 +844,17 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             if term =='MA' or term == 'ME'or term =='all':
                 plt.subplot(224)
                 for element in np.unique(Date):
-                    plt.errorbar(dec_obs[Date==element],dec_diff_corr_sec[Date==element],yerr=dec_diff_error[Date==element],linestyle='none',marker='o',label=element)
+                    plt.errorbar(dec_obs[Date==element],
+                                 dec_diff_corr_sec[Date==element],
+                                 yerr=dec_diff_error[Date==element],
+                                 linestyle='none',marker='o',label=element)
                 plt.xlabel('observed declination [°]')
                 plt.ylabel('dec_diff_corr = dec_obs-dec_corr [°]')
                 plt.title('Second correction'+' ('+term+')')
-                plt.plot(dec_space,0.033*np.ones(len(dec_space)),color='black',label='FOV')
-                plt.plot(dec_space,-0.033*np.ones(len(dec_space)),color='black')
+                plt.plot(dec_space,0.033*np.ones(len(dec_space)),
+                         color='black',label='FOV')
+                plt.plot(dec_space,-0.033*np.ones(len(dec_space)),
+                         color='black')
                 plt.legend(loc="upper left", bbox_to_anchor=(1,1))
             plt.show()
            
@@ -703,7 +863,9 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             plt.figure()
             plt.subplot(221)
             for element in np.unique(Date):
-                plt.errorbar(dec_diff[Date==element],15.*ha_diff[Date==element],linestyle='none',marker='.',label=element)
+                plt.errorbar(dec_diff[Date==element],
+                             15.*ha_diff[Date==element],
+                             linestyle='none',marker='.',label=element)
             fig = plt.gcf()
             ax = fig.gca()
         
@@ -717,7 +879,9 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             
             plt.subplot(222)
             for element in np.unique(Date):
-                plt.errorbar(dec_diff_corr[Date==element],15.*ha_diff_corr[Date==element],linestyle='none',marker='.',label=element)
+                plt.errorbar(dec_diff_corr[Date==element],
+                             15.*ha_diff_corr[Date==element],
+                             linestyle='none',marker='.',label=element)
             fig = plt.gcf()
             ax = fig.gca()
         
@@ -731,7 +895,9 @@ def fit_pointing_term(ha_obs,dec_obs,ha_calc,dec_calc,term,
             
             plt.subplot(224)
             for element in np.unique(Date):
-                plt.errorbar(dec_diff_corr_sec[Date==element],15.*ha_diff_corr_sec[Date==element],linestyle='none',marker='.',label=element)
+                plt.errorbar(dec_diff_corr_sec[Date==element],
+                             15.*ha_diff_corr_sec[Date==element],
+                             linestyle='none',marker='.',label=element)
             fig = plt.gcf()
             ax = fig.gca()
         
@@ -759,7 +925,9 @@ Date=np.array([])
 #On Desktop (Dropbox)
 current_path=pathlib.Path.cwd()
 parrent_path=current_path.parent
-file_path=parrent_path / 'data' / 'pointing_stars_coordinates_without_refr_corr_18july2018.txt'
+file_path=(parrent_path /
+           'data' /
+           'pointing_stars_coordinates_without_refr_corr_18july2018.txt')
 
 #Reading in the file
 readfile=open(str(file_path),'r')
