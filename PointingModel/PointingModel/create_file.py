@@ -162,7 +162,7 @@ for index in range(len(ha_calc_topo)):
     (ha_calc_corr[index],
      dec_calc_corr[index])=calculate_apparent_pos_from_true_pos(ha_calc_topo[index],
                                                                 dec_calc_topo[index],
-                                                                temp=25)
+                                                                temp=20,press=95.0)
         
 #With Refraction Correction
 #Store results in a file
