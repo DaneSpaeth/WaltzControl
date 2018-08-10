@@ -199,7 +199,11 @@ def add_star_and_traj(axis,star_ha,star_dec):
     traj_alt,traj_az=equ_to_altaz(traj_ha,traj_dec)
     
     #Create array, where to put the hour angle ticks
-    traj_ticks_ha=np.arange(np.round(star_ha),12)
+    #Define lower tick limit (round down from star_ha but stop at -11)
+    low_tick_lim=np.floor(star_ha)
+    if low_tick_lim<-11:
+        low_tick_lim=-11
+    traj_ticks_ha=np.arange(low_tick_lim,12)
     traj_ticks_dec=np.ones(len(traj_ticks_ha))*star_dec
     #Calculate the corresponding azimuth ticks
     __,traj_ticks_az=equ_to_altaz(traj_ticks_ha,traj_ticks_dec)
