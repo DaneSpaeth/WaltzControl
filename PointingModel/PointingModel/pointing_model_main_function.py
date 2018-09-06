@@ -8,7 +8,8 @@ import pathlib
 
 from pointing_model_functions import (apply_ID, apply_IH, apply_CH,
                                       apply_NP, apply_MA, apply_ME,
-                                      apply_FO, apply_DCES, apply_DCEC) 
+                                      apply_FO, apply_DCES, apply_DCEC,
+                                      apply_DLIN, apply_TF) 
 
 # fits a general set of pointing terms to the residuals between
 # measured and calculated positions (ha: hour angle, dec: declination)
@@ -143,7 +144,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error_ME=ha_corr_error
         dec_corr_error_ME=dec_corr_error
         
-    if term == 'FO':
+    if term == 'FO' or term == 'all':
         (dec_corr, dec_corr_error,
          FO, FO_error) = apply_FO(ha_corr_first, 
                                   ha_corr_first_error,
@@ -157,7 +158,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error= ha_corr_first_error
         dec_corr_error_FO=dec_corr_error
         
-    if term == 'DCES':
+    if term == 'DCES' or term == 'all':
         (dec_corr, dec_corr_error,
          DCES, DCES_error) = apply_DCES(dec_corr_first,
                                         dec_corr_first_error,
@@ -169,7 +170,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error= ha_corr_first_error
         dec_corr_error_DCES= dec_corr_error
         
-    if term == 'DCEC':
+    if term == 'DCEC' or term == 'all':
         (dec_corr, dec_corr_error,
          DCEC, DCEC_error) = apply_DCEC(dec_corr_first,
                                         dec_corr_first_error,
@@ -180,27 +181,67 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr= ha_corr_first
         ha_corr_error= ha_corr_first_error
         dec_corr_error_DCEC= dec_corr_error
+        
+    if term == 'DLIN' :
+        (dec_corr, dec_corr_error,
+         DCEC, DCEC_error) = apply_DLIN(dec_corr_first,
+                                        dec_corr_first_error,
+                                        dec_diff_corr,
+                                        dec_diff_corr_error)
+         
+        #Need that for 'all'
+        ha_corr= ha_corr_first
+        ha_corr_error= ha_corr_first_error
+        dec_corr_error_DLIN= dec_corr_error
+        
+    if term == 'TF' or term == 'all':
+        (ha_corr, ha_corr_error,
+         dec_corr, dec_corr_error,
+         TF, TF_error) = apply_TF(ha_corr_first, ha_corr_first_error,
+                                 dec_corr_first, dec_corr_first_error,
+                                 ha_diff_corr, ha_diff_corr_error,
+                                 dec_diff_corr, dec_diff_corr_error)
+        
+        ha_corr_error_TF=ha_corr_error
+        dec_corr_error_TF=dec_corr_error
+        
          
          
 
     if term == 'all':
+        #Define site's latitude
+        phi=49.3978620896919
+        
         ha_corr = (ha_corr_first-
                   CH/np.cos(np.radians(dec_corr_first))-
                   NP*np.tan(np.radians(dec_corr_first))-
-                  -MA/15.*np.cos(np.radians(15.*ha_corr_first))*
+                  -MA/15*np.cos(np.radians(15*ha_corr_first))*
                   np.tan(np.radians(dec_corr_first))-
                   ME/15*np.sin(np.radians(ha_corr_first*15.))*
-                  np.tan(np.radians(dec_corr_first)))
+                  np.tan(np.radians(dec_corr_first))-
+                  TF/15*np.cos(np.radians(phi))*
+                  np.sin(np.radians(ha_corr_first*15.))*
+                  1/np.cos(np.radians(dec_corr_first)))
         
         ha_corr_error=np.sqrt(ha_corr_first_error**2+
                               ha_corr_error_CH**2+
                               ha_corr_error_NP**2+
                               ha_corr_error_MA**2+
-                              ha_corr_error_ME**2)
+                              ha_corr_error_ME**2+
+                              ha_corr_error_TF**2)
         
         dec_corr=(dec_corr_first-
                  MA*np.sin(np.radians(ha_corr_first*15.))-
-                 ME*np.cos(np.radians(ha_corr_first*15.)))
+                 ME*np.cos(np.radians(ha_corr_first*15.))-
+                 DCES*np.sin(np.radians(dec_corr_first))-
+                 DCEC*np.cos(np.radians(dec_corr_first))-
+                 FO*np.cos(np.radians(ha_corr_first*15.))-
+                 TF*
+                 (np.cos(np.radians(phi))*
+                 np.cos(np.radians(ha_corr_first*15.))*
+                 np.sin(np.radians(dec_corr_first))-
+                 np.sin(np.radians(phi))*
+                 np.cos(np.radians(dec_corr_first))))
         
         dec_corr_error=np.sqrt(dec_corr_first_error**2+
                               dec_corr_error_MA**2+
@@ -280,7 +321,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.title('First Correction')
             
             #Plotting the second correction if the folowing terms are chosen 
-            if term == 'CH' or term =='NP' or term =='MA' or term == 'ME'or term =='all' :
+            if (term == 'CH' or
+                term == 'NP' or
+                term == 'MA' or
+                term == 'ME' or
+                term == 'TF' or
+                term =='all') :
                 plt.subplot(224)
                 plt.errorbar(ha_obs,ha_diff_corr_sec*60,
                              yerr=ha_diff_corr_sec_error*60,
@@ -323,7 +369,8 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             if (term == 'CH' or 
                 term =='NP' or 
                 term =='MA' or 
-                term == 'ME' or 
+                term == 'ME' or
+                term == 'TF' or
                 term =='all'):    
                 plt.subplot(224)
                 plt.errorbar(dec_obs,ha_diff_corr_sec*60,yerr=ha_diff_corr_error*60,
@@ -376,6 +423,8 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                 term == 'FO' or 
                 term == 'DCES' or
                 term == 'DCEC' or
+                term == 'DLIN' or
+                term == 'TF' or
                 term =='all'):
                 plt.subplot(224)
                 plt.errorbar(ha_obs,dec_diff_corr_sec*60,
@@ -426,6 +475,8 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                 term == 'FO' or
                 term == 'DCES' or
                 term == 'DCEC' or
+                term == 'DLIN' or
+                term == 'TF' or
                 term =='all'):
                 plt.subplot(224)
                 plt.errorbar(dec_obs,dec_diff_corr_sec*60,yerr=dec_diff_corr_sec_error*60,
@@ -571,6 +622,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                 term =='NP' or
                 term =='MA' or
                 term == 'ME' or
+                term == 'TF' or
                 term =='all'):
                 plt.subplot(224)
                 for element in np.unique(Date): 
@@ -622,6 +674,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                 term =='NP' or
                 term =='MA' or
                 term == 'ME'or
+                term == 'TF' or
                 term =='all') :
                 plt.subplot(224)
                 for element in np.unique(Date): 
@@ -675,6 +728,8 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                 term == 'FO' or
                 term == 'DCES' or
                 term == 'DCEC' or
+                term == 'DLIN' or
+                term == 'TF' or
                 term =='all'):
                 plt.subplot(224)
                 for element in np.unique(Date):
@@ -728,6 +783,8 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                 term == 'FO' or
                 term == 'DCES' or
                 term == 'DCEC' or
+                term == 'DLIN' or
+                term == 'TF' or
                 term =='all'):
                 plt.subplot(224)
                 for element in np.unique(Date):

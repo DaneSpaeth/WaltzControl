@@ -24,7 +24,7 @@ def reading_in_data(refr_corr=True):
     if refr_corr:
         file_path=(parrent_path /
                    'data' /
-                   'pointing_stars_coordinates_18july2018_last_points_removed.txt')
+                   'pointing_stars_coordinates_18july2018_13deg_95kPa_last_points_removed.txt')
     else:
         file_path=(parrent_path /
                    'data' /
@@ -75,7 +75,7 @@ def reading_in_data(refr_corr=True):
     #Assuming errors -> 
     #uncertainty of observed coord in degrees 
     #(chose 5 arcsec \approx 2/100*FOV)
-    uncertainty_obs=(5./3600.) 
+    uncertainty_obs=(5./3600.)*2 
    
     ha_obs_error=np.ones(len(ha_obs))*uncertainty_obs/15.
     dec_obs_error=np.ones(len(dec_obs))*uncertainty_obs
@@ -411,8 +411,9 @@ def apply_MA(ha_corr_first, ha_corr_first_error,
                      MA*np.cos(np.radians(ha_corr_first*15.))*
                      np.tan(np.radians(dec_corr_first)))
                      /ha_diff_corr_error)**2)
-    chi_2_d=np.sum((dec_diff_corr+
-                    MA*np.sin(np.radians(ha_corr_first*15.))**2))
+    chi_2_d=np.sum(((dec_diff_corr+
+                    MA*np.sin(np.radians(ha_corr_first*15.)))
+                    /dec_diff_corr_error)**2)
     #Now we can add these up
     chi_2=chi_2_h+chi_2_d
     #Calculating Degrees of freedom (we have one parameter (NP))
@@ -478,8 +479,8 @@ def apply_ME(ha_corr_first, ha_corr_first_error,
              ha_diff_corr, ha_diff_corr_error,
              dec_diff_corr, dec_diff_corr_error):
     """Calculates ME correction.
-       According to formulas ha_diff=+MA*cos(ha)*tan(dec)
-                             dec_diff=-MA*sin(ha)
+       According to formulas ha_diff=-ME*sin(ha)*tan(dec)
+                             dec_diff=-ME*cos(ha)
        
        Input: ha_corr_first, ha_corr_first_error:
               (Index corrected calculated hour angles with errors)
@@ -523,8 +524,9 @@ def apply_ME(ha_corr_first, ha_corr_first_error,
                      ME*np.sin(np.radians(ha_corr_first*15.))*
                      np.tan(np.radians(dec_corr_first)))
                      /ha_diff_corr_error)**2)
-    chi_2_d=np.sum((dec_diff_corr+
-                    ME*np.cos(np.radians(ha_corr_first*15.))**2))
+    chi_2_d=np.sum(((dec_diff_corr+
+                    ME*np.cos(np.radians(ha_corr_first*15.)))
+                    /dec_diff_corr_error)**2)
     #Now we can add these up
     chi_2=chi_2_h+chi_2_d
     #Calculating Degrees of freedom (we have one parameter (NP))
@@ -752,6 +754,223 @@ def apply_DCEC(dec_corr_first, dec_corr_first_error,
     print('DCEC[°]=',DCEC,'+-',DCEC_error,' with chi^2_red=',chi_2_red)
     
     return (dec_corr, dec_corr_error, DCEC, DCEC_error)
+
+def apply_DLIN(dec_corr_first, dec_corr_first_error,
+               dec_diff_corr, dec_diff_corr_error):
+    """Calculates linear correction.
+       According to formula dec_diff=-DLIN*dec
+       
+       Input: dec_corr_first, dec_corr_first_error:
+              (Index corrected calculated declinations with errors)
+              ha_diff_corr, ha_diff_corr_error:
+              (Index corrected calculated hour angle differences with errors)
+         
+       Output: dec_corr, dec_corr_error:
+               (DLIN corrected hour angles with errors)
+               DLIN, DLIN_error
+               (value of DLIN and error)
+    """
+    sxx = sum(dec_corr_first**2*1/(dec_diff_corr_error)**2)
+    sxy = sum(dec_diff_corr*dec_corr_first*1/(dec_diff_corr_error)**2)
+    
+    #Need a minus sign
+    DLIN = - (sxy/sxx)
+    
+    #Calculating chi^2 (we have +DLIN 
+    #since we have the formula dec_diff=-DLIN*dec)
+    chi_2=np.sum(((dec_diff_corr+DLIN*dec_corr_first)
+                  /dec_diff_corr_error)**2)
+    #Calculating Degrees of freedom (we have one parameter (DLIN))
+    #So deg_free=number of datapoints-1
+    deg_free=len(dec_diff_corr)-1
+    #Calculating reduced chi^2
+    chi_2_red=chi_2/deg_free
+    
+    
+    #For calculating the error
+    s=sum(1/(dec_diff_corr_error)**2)
+    sx=sum((dec_corr_first/dec_diff_corr_error)**2)
+    Delta=s*sxx-sx**2
+        
+    DLIN_error=s/Delta
+    
+    
+    #First calculate the error
+    dec_corr_error=np.sqrt((dec_corr_first_error)**2+
+                          (dec_corr_first*DLIN_error)**2+
+                          (DLIN*
+                           dec_corr_first_error)**2)
+    
+    #Calculate corrected ha
+    dec_corr = dec_corr_first-DLIN*dec_corr_first
+        
+    print('DLIN=',DLIN,'+-',DLIN_error,' with chi^2_red=',chi_2_red)
+    
+    return (dec_corr, dec_corr_error, DLIN, DLIN_error)
+
+def apply_TF(ha_corr_first, ha_corr_first_error,
+             dec_corr_first, dec_corr_first_error,
+             ha_diff_corr, ha_diff_corr_error,
+             dec_diff_corr, dec_diff_corr_error):
+    """Calculates TF correction.
+       According to formulas ha_diff=-TF*cos(phi)*sin(ha)*1/cos(dec)
+                             dec_diff=-TF*(cos(phi)*cos(ha)*sin(dec)
+                                           -sin(phi)*cos(dec))
+       
+       Input: ha_corr_first, ha_corr_first_error:
+              (Index corrected calculated hour angles with errors)
+              dec_corr_first, dec_corr_first_error:
+              (Index corrected calculated declinations with errors)
+              ha_diff_corr, ha_diff_corr_error:
+              (Index corrected calculated hour angle differences with errors)
+              dec_diff_corr, dec_diff_corr_error:
+              (Index corrected calculated declination differences with errors)
+         
+       Output: ha_corr, ha_corr_error:
+               (NP corrected hour angles with errors)
+               dec_corr, dec_corr_error
+               TF, TF_error
+               (Value of MA and error)
+    """
+    
+    #We calculate  TF in degree. 
+    #For that reason we introduce a factor of 15 
+    #in all calculations with hour angles
+    #It would look nicer 
+    #if we would make this calculation just once in the beginning
+    
+    #Define site's latitude
+    phi=49.3978620896919
+    
+    sxxh = sum((np.cos(np.radians(phi))*
+                np.sin(np.radians(ha_corr_first*15.))*
+                1/np.cos(np.radians(dec_corr_first)))**2*
+                1/(ha_diff_corr_error*15.)**2)
+    sxyh = sum(ha_diff_corr*15*
+               np.cos(np.radians(phi))*
+               np.sin(np.radians(ha_corr_first*15.))*
+               1/np.cos(np.radians(dec_corr_first))*
+               1/(ha_diff_corr_error*15.)**2)
+    
+    sxxd = sum((np.cos(np.radians(phi))*
+               np.cos(np.radians(ha_corr_first*15.))*
+               np.sin(np.radians(dec_corr_first))-
+               np.sin(np.radians(phi))*
+               np.cos(np.radians(dec_corr_first)))**2*
+               1/(dec_diff_corr_error)**2)
+    sxyd = sum(dec_diff_corr*
+               (np.cos(np.radians(phi))*
+               np.cos(np.radians(ha_corr_first*15.))*
+               np.sin(np.radians(dec_corr_first))-
+               np.sin(np.radians(phi))*
+               np.cos(np.radians(dec_corr_first)))*
+               1/(dec_diff_corr_error)**2)
+
+    TF= -(sxyh+sxyd)/(sxxh+sxxd)
+    
+    #Calculating chi^2 for ha and dec seperately
+    chi_2_h=np.sum((ha_diff_corr+
+                     TF*(np.cos(np.radians(phi))*
+                         np.sin(np.radians(ha_corr_first*15.))*
+                         1/np.cos(np.radians(dec_corr_first)))
+                     /ha_diff_corr_error)**2)
+    chi_2_d=np.sum((dec_diff_corr+
+                    TF*(np.cos(np.radians(phi))*
+                        np.cos(np.radians(ha_corr_first*15.))*
+                        np.sin(np.radians(dec_corr_first))-
+                        np.sin(np.radians(phi))*
+                        np.cos(np.radians(dec_corr_first)))
+                    /dec_diff_corr_error)**2)
+    #Now we can add these up
+    chi_2=chi_2_h+chi_2_d
+    #Calculating Degrees of freedom (we have one parameter (NP))
+    #So deg_free=number of datapoints-1
+    deg_free=len(ha_diff_corr)+len(dec_diff_corr)-1
+    #Calculating reduced chi^2
+    chi_2_red=chi_2/deg_free
+    
+    #For calculating the error    
+    sh=sum(1/(ha_diff_corr_error*15.)**2)
+    sxh=sum(np.cos(np.radians(phi))*
+            np.sin(np.radians(ha_corr_first*15.))*
+            1/np.cos(np.radians(dec_corr_first))/
+            (ha_diff_corr_error*15.)**2)
+        
+    sd=sum(1/(dec_diff_corr_error)**2)
+    sxd=sum((np.cos(np.radians(phi))*
+             np.cos(np.radians(ha_corr_first*15.))*
+             np.sin(np.radians(dec_corr_first))-
+             np.sin(np.radians(phi))*
+             np.cos(np.radians(dec_corr_first)))
+             /(dec_diff_corr_error)**2)
+        
+    s=sh+sd
+    sx=sxh+sxd
+    sxx=sxxh+sxxd
+        
+    Delta=s*sxx-sx**2
+        
+    TF_error=s/Delta
+               
+    #Calculate corrected HA and DEC and their errors
+        
+    ha_corr = (ha_corr_first-
+               TF/15.*
+               np.cos(np.radians(phi))*
+               np.sin(np.radians(ha_corr_first*15.))*
+               1/np.cos(np.radians(dec_corr_first)))
+    dec_corr = (dec_corr_first-
+                TF*
+                (np.cos(np.radians(phi))*
+                 np.cos(np.radians(ha_corr_first*15.))*
+                 np.sin(np.radians(dec_corr_first))-
+                 np.sin(np.radians(phi))*
+                 np.cos(np.radians(dec_corr_first))))
+    
+        
+    ha_corr_error=np.sqrt(ha_corr_first_error**2+
+                          (np.cos(np.radians(phi))*
+                           np.sin(np.radians(ha_corr_first*15.))*
+                           1/np.cos(np.radians(dec_corr_first))*
+                           TF_error/15.)**2+
+                          (TF/15.*np.cos(np.radians(phi))*
+                           np.sin(np.radians(ha_corr_first*15.))*
+                           1/np.cos(np.radians(dec_corr_first))*
+                           ha_corr_first_error)**2+
+                          (TF/15.*np.cos(np.radians(phi))*
+                           np.cos(np.radians(ha_corr_first*15.))*
+                           1/np.cos(np.radians(dec_corr_first))*
+                           np.tan(np.radians(dec_corr_first))*
+                           dec_corr_first_error/15.)**2)
+                          
+    term=(np.cos(np.radians(phi))*
+          np.cos(np.radians(ha_corr_first*15.))*
+          np.sin(np.radians(dec_corr_first))-
+          np.sin(np.radians(phi))*
+          np.cos(np.radians(dec_corr_first)))
+        
+    dec_corr_error=np.sqrt((dec_corr_first_error)**2+
+                           (term*TF_error)**2+
+                           (TF*np.sin(np.radians(ha_corr_first*15))*
+                            np.sin(np.radians(dec_corr_first))*
+                            ha_corr_first_error*15.)**2+
+                           (TF*(np.cos(np.radians(phi))*
+                            np.cos(np.radians(ha_corr_first*15))*
+                            np.cos(np.radians(dec_corr_first))-
+                            np.sin(np.radians(phi))*
+                            np.sin(np.radians(dec_corr_first)))*
+                           dec_corr_first_error)**2
+                          )
+        
+    print('TF[°]=',TF,'+-',TF_error,' with chi^2_red=',chi_2_red)
+    
+    return(ha_corr, ha_corr_error,
+           dec_corr, dec_corr_error,
+           TF, TF_error)
+
+
+    
+    
     
     
     
