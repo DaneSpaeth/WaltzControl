@@ -88,7 +88,24 @@ def reading_in_data(refr_corr=True):
             Date, LST)
 
 def apply_IH(ha_obs,ha_obs_error,ha_calc,Date,ObservationDate='all'):
-    """Calculates Index Error in HA and applies to calculated coordinates.
+    """Calculates IH correction.
+       According to formula ha_diff=-IH
+       
+       Input: ha_obs, ha_obs_error:
+              (Observed hour angles with errors)
+              ha_calc:
+              (Calculated hour angles)
+              Date:
+              (Array of observed dates)
+              ObservationDate:
+              (String of chosen ObservationDate or 'all')
+         
+       Output: ha_diff, ha_diff_error:
+               (Initial hour angles differences with errors)
+               ha_corr, ha_corr_error:
+               (Index corrected hour angles with errors)
+               ha_diff_corr, ha_diff_corr_error:
+               (Index corrected hour angle differences with errors)
     """
     
     #Initial Differences between observed and calculated coordinates
@@ -167,7 +184,24 @@ def apply_IH(ha_obs,ha_obs_error,ha_calc,Date,ObservationDate='all'):
 
 
 def apply_ID(dec_obs,dec_obs_error,dec_calc,Date, ObservationDate='all'):
-    """Calculates Index Error in Dec and applies to calculated coordinates.
+    """Calculates ID correction.
+       According to formula dec_diff=-ID
+       
+       Input: dec_obs, dec_obs_error:
+              (Observed declinations with errors)
+              dec_calc:
+              (Calculated declinations)
+              Date:
+              (Array of observed dates)
+              ObservationDate:
+              (String of chosen ObservationDate or 'all')
+         
+       Output: dec_diff, dec_diff_error:
+               (Initial declination differences with errors)
+               dec_corr, dec_corr_error:
+               (Index corrected declinations with errors)
+               dec_diff_corr, dec_diff_corr_error:
+               (Index corrected declination differences with errors)
     """
     #Initial Differences between observed and calculated coordinates
     dec_diff = dec_obs - dec_calc
