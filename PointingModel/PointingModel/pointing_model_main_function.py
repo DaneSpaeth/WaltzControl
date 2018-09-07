@@ -16,8 +16,6 @@ from pointing_model_functions import (apply_ID, apply_IH, apply_CH,
 # only one terms is modelled at each time
 
 # input:
-# pos_obs: tuples of (HA,DEC) observed (telescope coordinates), radians
-# pos_calc: tuples of (HA,DEC) calculated (apparent place), radians
 # ha: hour angle during the observation, radians
 # term: string with the term to model, e.g. term = ['IH']
 
@@ -31,31 +29,62 @@ from pointing_model_functions import (apply_ID, apply_IH, apply_CH,
 # CH: non-perpendicularity of DEC and pointing axes
 # ME: polar axis elevation error
 # MA: polar axis error east-west
+# TF: tube flexure
+# FO: fork flexure
+# DCES: DEC centering error (sine component)
+# DCEC: DEC centering error (cosine component)
+# DLIN: DEC linear fit 
 
 # possible additional terms to model for an equatorial mount
 
-# FO: fork flexure
+
 # DAF: declination axis flexure
 # HCES: HA centering error (sine component)
 # HCEC: HA centering error (cosine component)
-# DCES: DEC centering error (sine component)
-# DCEC: DEC centering error (cosine component)
 # DNP: dynamic non-perpendicularity
 # X2HC: cos(2h) term EW
 
 # those latter ones are not included yet at the current stage
+ 
    
-# take differences of coordinates (pointing displacements)
-   
 
 
-def fit_pointing_term(ha_obs,ha_obs_error,
-                      dec_obs,dec_obs_error,
-                      ha_calc,dec_calc,Date,term,LST=None,
-                      plot=True,ObservationDate='all'):
+def fit_pointing_term(ha_obs, ha_obs_error,
+                      dec_obs, dec_obs_error,
+                      ha_calc, dec_calc,
+                      Date, terms, LST=None,
+                      plot=True, ObservationDate='all'):
+    """Calculates Pointing term corrections. 
+       Prints Results.
+       Plots Results if chosen.
+    
+       Input:
+       ha_ons, ha_obs_error
+       (array of observed hour angles and erros)
+       dec_obs, dec_obs_error
+       (array of observed declinations and erros)
+       ha_calc, dec_calc
+       (arrays of calculated hour angle and declination)
+       Date
+       (array of observed dates)
+       terms
+       (list of terms to be fitted or 'all')
+       LST=None
+       (array of Local Sidereal Times
+       plot=True
+       (Boolean if Results should be plotted)
+       ObservationDate
+       (String of one Date that should be picked out of Date array or 'all')
+    """
+       
+    #terms array is an arary of strings containing the chosen pointing terms
+    #IH and ID are always fitted
+    #Define which terms are fitted if input is 'all'
+    if terms == 'all':
+        terms = ['CH','NP','MA','ME','TF','FO','DCES','DCEC']
 
 
-   
+
     #We want to be able to specify a certain 
     #Date of Observation and need to mask
     #the arrays for this purpose
@@ -89,9 +118,17 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         
     dec_corr_first_error=dec_corr_error
     ha_corr_first_error=ha_corr_error
+    
+    #Define empty lists in which corrections are stored
+    ha_correction_list=[]
+    dec_correction_list=[]
+    
+    ha_correction_error_list=[]
+    dec_correction_error_list=[]
+    
    
    #Fitting following Numerical Recipes by W. H. Press page 781 f.
-    if term == 'CH' or term== 'all':
+    if 'CH' in terms:
         (ha_corr, ha_corr_error,
          CH, CH_error, CH_correction) = apply_CH(ha_corr_first, 
                                                  ha_corr_first_error,
@@ -105,8 +142,13 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         dec_corr = dec_corr_first
         dec_corr_error= dec_corr_first_error
         ha_corr_error_CH=ha_corr_error
+        
+        #Append CH_correction into correction list
+        ha_correction_list.append(CH_correction)
+        #And Error
+        ha_correction_error_list.append(ha_corr_error_CH)
       
-    if term == 'NP' or term =='all':
+    if 'NP' in terms:
         (ha_corr, ha_corr_error,
          NP, NP_error, NP_correction) = apply_NP(ha_corr_first, 
                                                  ha_corr_first_error,
@@ -120,7 +162,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         dec_corr_error= dec_corr_first_error
         ha_corr_error_NP=ha_corr_error
         
-    if term == 'MA'or term =='all':
+        #Append NP_correction into correction list
+        ha_correction_list.append(NP_correction)
+        #And Error
+        ha_correction_error_list.append(ha_corr_error_NP)
+        
+    if 'MA' in terms:
         
         (ha_corr, ha_corr_error,
         dec_corr, dec_corr_error,
@@ -133,8 +180,15 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         
         ha_corr_error_MA=ha_corr_error
         dec_corr_error_MA=dec_corr_error
+        
+        #Append MA_correction into correction list
+        ha_correction_list.append(MA_correction_ha)
+        dec_correction_list.append(MA_correction_dec)
+        #And Errors
+        ha_correction_error_list.append(ha_corr_error_MA)
+        dec_correction_error_list.append(dec_corr_error_MA)
    
-    if term == 'ME' or term =='all':
+    if 'ME' in terms:
 
         (ha_corr, ha_corr_error,
         dec_corr, dec_corr_error,
@@ -148,7 +202,14 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error_ME=ha_corr_error
         dec_corr_error_ME=dec_corr_error
         
-    if term == 'FO' or term == 'all':
+        #Append ME_correction into correction list
+        ha_correction_list.append(ME_correction_ha)
+        dec_correction_list.append(ME_correction_dec)
+        #And Errors
+        ha_correction_error_list.append(ha_corr_error_ME)
+        dec_correction_error_list.append(dec_corr_error_ME)
+        
+    if 'FO' in terms:
         (dec_corr, dec_corr_error,
          FO, FO_error,
          FO_correction) = apply_FO(ha_corr_first, 
@@ -163,7 +224,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error= ha_corr_first_error
         dec_corr_error_FO=dec_corr_error
         
-    if term == 'DCES' or term == 'all':
+        #Append FO_correction into correction list
+        dec_correction_list.append(FO_correction)
+        #And Errors
+        dec_correction_error_list.append(dec_corr_error_FO)
+        
+    if 'DCES' in terms:
         (dec_corr, dec_corr_error,
          DCES, DCES_error,
          DCES_correction) = apply_DCES(dec_corr_first,
@@ -176,7 +242,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error= ha_corr_first_error
         dec_corr_error_DCES= dec_corr_error
         
-    if term == 'DCEC' or term == 'all':
+        #Append DCES_correction into correction list
+        dec_correction_list.append(DCES_correction)
+        #And Errors
+        dec_correction_error_list.append(dec_corr_error_DCES)
+        
+    if 'DCEC' in terms:
         (dec_corr, dec_corr_error,
          DCEC, DCEC_error,
          DCEC_correction) = apply_DCEC(dec_corr_first,
@@ -189,7 +260,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error= ha_corr_first_error
         dec_corr_error_DCEC= dec_corr_error
         
-    if term == 'DLIN' :
+        #Append DCEC_correction into correction list
+        dec_correction_list.append(DCEC_correction)
+        #And Errors
+        dec_correction_error_list.append(dec_corr_error_DCEC)
+        
+    if 'DLIN' in terms :
         (dec_corr, dec_corr_error,
          DLIN, DLIN_error,
          DLIN_correction) = apply_DLIN(dec_corr_first,
@@ -202,7 +278,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error= ha_corr_first_error
         dec_corr_error_DLIN= dec_corr_error
         
-    if term == 'TF' or term == 'all':
+        #Append DLIN_correction into correction list
+        dec_correction_list.append(DLIN_correction)
+        #And Errors
+        dec_correction_error_list.append(dec_corr_error_DLIN)
+        
+    if 'TF' in terms:
         (ha_corr, ha_corr_error,
          dec_corr, dec_corr_error,
          TF, TF_error,
@@ -215,38 +296,28 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         ha_corr_error_TF=ha_corr_error
         dec_corr_error_TF=dec_corr_error
         
+        #Append TF_correction into correction list
+        ha_correction_list.append(TF_correction_ha)
+        dec_correction_list.append(TF_correction_dec)
+        #And Errors
+        ha_correction_error_list.append(ha_corr_error_TF)
+        dec_correction_error_list.append(dec_corr_error_TF)
+        
+    #All fitting is done
+    #Add corrections together
          
-         
-
-    if term == 'all':
-        
-        ha_corr = (ha_corr_first +
-                   CH_correction +
-                   NP_correction +
-                   MA_correction_ha +
-                   ME_correction_ha + 
-                   TF_correction_ha)
-        
-        ha_corr_error=np.sqrt(ha_corr_first_error**2+
-                              ha_corr_error_CH**2+
-                              ha_corr_error_NP**2+
-                              ha_corr_error_MA**2+
-                              ha_corr_error_ME**2+
-                              ha_corr_error_TF**2)
-        
-        dec_corr=(dec_corr_first +
-                  MA_correction_dec +
-                  ME_correction_dec +
-                  DCES_correction +
-                  DCEC_correction +
-                  FO_correction +
-                  TF_correction_dec)
-        
-        dec_corr_error=np.sqrt(dec_corr_first_error**2+
-                              dec_corr_error_MA**2+
-                              dec_corr_error_ME**2)
+    #    
+    ha_corr = ha_corr_first + sum(ha_correction_list)
     
-      #Second array of differences with second corrections
+    squared_ha_errors=[error**2 for error in ha_correction_error_list]
+    ha_corr_error = np.sqrt(ha_corr_first_error**2+sum(squared_ha_errors))
+        
+    dec_corr = dec_corr_first + sum(dec_correction_list) 
+    
+    squared_dec_errors=[error**2 for error in dec_correction_error_list]    
+    dec_corr_error=np.sqrt(dec_corr_first_error**2+sum(squared_dec_errors))
+    
+    #Second array of differences with second corrections
     ha_diff_corr_sec = ha_obs - ha_corr
     ha_diff_corr_sec_error=np.sqrt(ha_obs_error**2+ha_corr_error**2)
     dec_diff_corr_sec = dec_obs - dec_corr
@@ -298,7 +369,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.errorbar(ha_obs,ha_diff*60,yerr=ha_diff_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
-            plt.ylabel('ha_diff = ha_obs-ha_calc [min]')
+            plt.ylabel('ra_diff = ra_obs - ra_calc [min]')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
             plt.plot(ha_space,0.0022*np.ones(len(ha_space))*60,
                      color='black',label='FOV')
@@ -311,7 +382,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.errorbar(ha_obs,ha_diff_corr*60,yerr=ha_diff_corr_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed hour angle [h]')
-            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [min]')
+            plt.ylabel('ra_diff_cor = ra_obs - ra_corr [min]')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
             plt.plot(ha_space,0.0022*np.ones(len(ha_space))*60,
                      color='black',label='FOV')
@@ -320,18 +391,17 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.title('First Correction')
             
             #Plotting the second correction if the folowing terms are chosen 
-            if (term == 'CH' or
-                term == 'NP' or
-                term == 'MA' or
-                term == 'ME' or
-                term == 'TF' or
-                term =='all') :
+            if ('CH' in terms or
+                'NP' in terms or
+                'MA' in terms or
+                'ME' in terms or
+                'TF' in terms) :
                 plt.subplot(224)
                 plt.errorbar(ha_obs,ha_diff_corr_sec*60,
                              yerr=ha_diff_corr_sec_error*60,
                              linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed hour angle [h]')
-                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [min]')
+                plt.ylabel('ra_diff_cor_sec = ra_obs - ra_corr [min]')
                 plt.title('Second Correction')
                 plt.plot(ha_space,0.0022*np.ones(len(ha_space))*60,
                          color='black',label='FOV')
@@ -346,7 +416,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.errorbar(dec_obs, ha_diff*60,yerr=ha_diff_error*60,
                          linestyle='none',marker='o', label=ObservationDate)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('ha_diff = ha_obs-ha_calc [min]')
+            plt.ylabel('ra_diff = ra_obs - ra_calc [min]')
             plt.plot(dec_space,0.0022*np.ones(len(dec_space))*60,
                      color='black',label='FOV')
             plt.plot(dec_space,-0.0022*np.ones(len(dec_space))*60,color='black')
@@ -357,7 +427,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.errorbar(dec_obs, ha_diff_corr*60,yerr=ha_diff_corr_error*60,
                          linestyle='none',marker='o',label=ObservationDate)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [min]')
+            plt.ylabel('ra_diff_cor = ra_obs - ra_corr [min]')
             plt.plot(dec_space,0.0022*np.ones(len(dec_space))*60,
                      color='black',label='FOV')
             plt.plot(dec_space,-0.0022*np.ones(len(dec_space))*60,color='black')
@@ -365,17 +435,16 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.title('First Correction')
             
             #Second Correction: Plot only in these cases
-            if (term == 'CH' or 
-                term =='NP' or 
-                term =='MA' or 
-                term == 'ME' or
-                term == 'TF' or
-                term =='all'):    
+            if ('CH' in terms or
+                'NP' in terms or
+                'MA' in terms or
+                'ME' in terms or
+                'TF' in terms):    
                 plt.subplot(224)
                 plt.errorbar(dec_obs,ha_diff_corr_sec*60,yerr=ha_diff_corr_error*60,
                              linestyle='none',marker='o',label=ObservationDate)
                 plt.xlabel('observed declination[°]')
-                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [min]')
+                plt.ylabel('ra_diff_cor_sec = ra_obs - ra_corr [min]')
                 plt.title('Second Correction')
                 plt.plot(dec_space,0.0022*np.ones(len(dec_space))*60,
                          color='black',label='FOV')
@@ -417,14 +486,13 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             
             
             #Second Correction: Plot only in these cases
-            if (term == 'MA' or 
-                term == 'ME' or 
-                term == 'FO' or 
-                term == 'DCES' or
-                term == 'DCEC' or
-                term == 'DLIN' or
-                term == 'TF' or
-                term =='all'):
+            if ('MA' in terms or 
+                'ME' in terms or
+                'FO' in terms or
+                'DCES' in terms or
+                'DCEC' in terms or
+                'DLIN' in terms or
+                'TF' in terms):
                 plt.subplot(224)
                 plt.errorbar(ha_obs,dec_diff_corr_sec*60,
                              yerr=dec_diff_corr_sec_error*60,
@@ -469,14 +537,13 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             
             
             #Second Correction: Plot only in these cases
-            if (term == 'MA' or 
-                term == 'ME' or
-                term == 'FO' or
-                term == 'DCES' or
-                term == 'DCEC' or
-                term == 'DLIN' or
-                term == 'TF' or
-                term =='all'):
+            if ('MA' in terms or 
+                'ME' in terms or
+                'FO' in terms or
+                'DCES' in terms or
+                'DCEC' in terms or
+                'DLIN' in terms or
+                'TF' in terms):
                 plt.subplot(224)
                 plt.errorbar(dec_obs,dec_diff_corr_sec*60,yerr=dec_diff_corr_sec_error*60,
                              linestyle='none',marker='o',
@@ -595,7 +662,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                              yerr=ha_diff_error[Date==element],
                              linestyle='none',marker='.',label=element)
             plt.xlabel('observed hour angle [h]')#
-            plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
+            plt.ylabel('ra_diff = ra_obs - ra_calc [h]')
             plt.title('Initial Data')
             #We also include a FOV area which is computed by 4'x 4' FOV of the guidung camera (4'=0.0044h=0.067°)
             plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
@@ -609,7 +676,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                              yerr=ha_diff_corr_error[Date==element],
                              linestyle='none',marker='o',label=element)
             plt.xlabel('observed hour angle [h]')
-            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
+            plt.ylabel('ra_diff_cor = ra_obs - ra_corr [h]')
             plt.title('First correction')
             plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
                      color='black',label='FOV')
@@ -617,12 +684,11 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
           
           #Second Correction: Plot only in these cases
-            if (term == 'CH' or
-                term =='NP' or
-                term =='MA' or
-                term == 'ME' or
-                term == 'TF' or
-                term =='all'):
+            if ('CH' in terms or
+                'NP' in terms or
+                'MA' in terms or
+                'ME' in terms or
+                'TF' in terms):
                 plt.subplot(224)
                 for element in np.unique(Date): 
                     plt.errorbar(ha_obs[Date==element],
@@ -630,7 +696,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                                  yerr=ha_diff_corr_sec_error[Date==element],
                                  linestyle='none',marker='o',label=element)
                 plt.xlabel('observed hour angle [h]')
-                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
+                plt.ylabel('ra_diff_cor_sec = ra_obs - ra_corr [h]')
                 plt.title('Second Correction'+' ('+term+')')
                 plt.plot(ha_space,0.0022*np.ones(len(ha_space)),
                          color='black',label='FOV')
@@ -646,7 +712,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                              yerr=ha_diff_error[Date==element],
                              linestyle='none',marker='o',label=element)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('ha_diff = ha_obs-ha_calc [h]')
+            plt.ylabel('ra_diff = ra_obs - ra_calc [h]')
             plt.title('Initial Data')
             plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
                      color='black',label='FOV')
@@ -660,7 +726,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                              yerr=ha_diff_corr_error[Date==element],
                              linestyle='none',marker='o',label=element)
             plt.xlabel('observed declination [°]')
-            plt.ylabel('ha_diff_corr = ha_obs-ha_corr [h]')
+            plt.ylabel('ra_diff_cor = ra_obs - ra_corr [h]')
             plt.title('First correction')
             plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
                      color='black',label='FOV')
@@ -669,12 +735,11 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.show()
           
           #Second Correction: Plot only in these cases
-            if (term == 'CH' or
-                term =='NP' or
-                term =='MA' or
-                term == 'ME'or
-                term == 'TF' or
-                term =='all') :
+            if ('CH' in terms or
+                'NP' in terms or
+                'MA' in terms or
+                'ME' in terms or
+                'TF' in terms) :
                 plt.subplot(224)
                 for element in np.unique(Date): 
                     plt.errorbar(dec_obs[Date==element],
@@ -682,7 +747,7 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                                  yerr=ha_diff_corr_error[Date==element],
                                  linestyle='none',marker='o',label=element)
                 plt.xlabel('observed declination[°]')
-                plt.ylabel('ha_diff_corr_sec = ha_obs-ha_corr [h]')
+                plt.ylabel('ra_diff_cor_sec = ra_obs - ra_corr [h]')
                 plt.title('Second Correction'+' ('+term+')')
                 plt.plot(dec_space,0.0022*np.ones(len(dec_space)),
                          color='black',label='FOV')
@@ -722,14 +787,13 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             plt.legend(loc="upper left", bbox_to_anchor=(1,1))
           
           #Second Correction: Plot only in these cases
-            if (term == 'MA' or
-                term == 'ME' or
-                term == 'FO' or
-                term == 'DCES' or
-                term == 'DCEC' or
-                term == 'DLIN' or
-                term == 'TF' or
-                term =='all'):
+            if ('MA' in terms or 
+                'ME' in terms or
+                'FO' in terms or
+                'DCES' in terms or
+                'DCEC' in terms or
+                'DLIN' in terms or
+                'TF' in terms):
                 plt.subplot(224)
                 for element in np.unique(Date):
                     plt.errorbar(ha_obs[Date==element],
@@ -777,14 +841,13 @@ def fit_pointing_term(ha_obs,ha_obs_error,
             
           
           #Second Correction: Plot only in these cases
-            if (term == 'MA' or
-                term == 'ME' or
-                term == 'FO' or
-                term == 'DCES' or
-                term == 'DCEC' or
-                term == 'DLIN' or
-                term == 'TF' or
-                term =='all'):
+            if ('MA' in terms or 
+                'ME' in terms or
+                'FO' in terms or
+                'DCES' in terms or
+                'DCEC' in terms or
+                'DLIN' in terms or
+                'TF' in terms):
                 plt.subplot(224)
                 for element in np.unique(Date):
                     plt.errorbar(dec_obs[Date==element],

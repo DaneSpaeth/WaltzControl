@@ -1,6 +1,5 @@
-import numpy as np
+numbers=[1,2,3,4,5,7,8,9,10]
 
-a=np.array([1,2,3,4,5])
-b=a-1
+squares=[number**2 for number in numbers]
 
-print(b)
+print(squares)
