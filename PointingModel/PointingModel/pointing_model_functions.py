@@ -289,6 +289,8 @@ def apply_CH(ha_corr_first, ha_corr_first_error,
                (NP corrected hour angles with errors)
                CH, CH_error
                (value of CH and error)
+               CH_correction:
+               (array of correction values to be added to ha_corr_first)
     """
     #CH in units of hours
     sxx = sum((1/(np.cos(np.radians(dec_corr_first))))**2*
@@ -323,14 +325,17 @@ def apply_CH(ha_corr_first, ha_corr_first_error,
                           (CH/(np.cos(np.radians(dec_corr_first)))**2*
                            np.sin(np.radians(dec_corr_first))*
                            dec_corr_first_error/15.)**2)
+                          
+    #Calulating the correction array
+    CH_correction=-CH/np.cos(np.radians(dec_corr_first))
 
     #Calculating the corrected coordinates
-    ha_corr = ha_corr_first-CH/np.cos(np.radians(dec_corr_first))
+    ha_corr = ha_corr_first+CH_correction
 
                         
     print('CH[h]=',CH,'+-',CH_error,' with chi^2_red=',chi_2_red)
     
-    return (ha_corr, ha_corr_error, CH, CH_error)
+    return (ha_corr, ha_corr_error, CH, CH_error, CH_correction)
 
 def apply_NP(ha_corr_first, ha_corr_first_error,
              dec_corr_first, dec_corr_first_error,
@@ -349,6 +354,8 @@ def apply_NP(ha_corr_first, ha_corr_first_error,
                (NP corrected hour angles with errors)
                CH, CH_error
                (value of CH and error)
+               CH_correction:
+               (array of correction values to be added to ha_corr_first)
     """
               
                                   
@@ -386,12 +393,15 @@ def apply_NP(ha_corr_first, ha_corr_first_error,
                           (NP/(np.cos(np.radians(dec_corr_first)))**2*
                            dec_corr_first_error/15.)**2)
     
+    #Calculate correction array
+    NP_correction= -NP*np.tan(np.radians(dec_corr_first))
+    
     #Calculate corrected ha
-    ha_corr = ha_corr_first-NP*np.tan(np.radians(dec_corr_first))
+    ha_corr = ha_corr_first+NP_correction
         
     print('NP[h]=',NP,'+-',NP_error,' with chi^2_red=',chi_2_red)
     
-    return (ha_corr, ha_corr_error, NP, NP_error)
+    return (ha_corr, ha_corr_error, NP, NP_error, NP_correction)
 
 def apply_MA(ha_corr_first, ha_corr_first_error,
              dec_corr_first, dec_corr_first_error,
@@ -411,10 +421,15 @@ def apply_MA(ha_corr_first, ha_corr_first_error,
               (Index corrected calculated declination differences with errors)
          
        Output: ha_corr, ha_corr_error:
-               (NP corrected hour angles with errors)
+               (MA corrected hour angles with errors)
                dec_corr, dec_corr_error
+               (MA corrected declinations with errors)
                MA, MA_error
                (value of MA and error)
+               MA_correction_ha:
+               (array of correction values to be added to ha_corr_first)
+               MA_correction_dec:
+               (array of correction values to be added to dec_corr_first)
     """
     
     #We calculate MA and Me in degree. 
@@ -474,14 +489,19 @@ def apply_MA(ha_corr_first, ha_corr_first_error,
     Delta=s*sxx-sx**2
         
     MA_error=s/Delta
-        
+    
+    #Calculate correction arrays
+    MA_correction_ha=(+MA/15.*
+                      np.cos(np.radians(15.*ha_corr_first))*
+                      np.tan(np.radians(dec_corr_first)))
+    
+    MA_correction_dec=-MA*np.sin(np.radians(ha_corr_first*15.))
+    
+    
     #Calculate corrected HA and DEC and their errors
         
-    ha_corr = (ha_corr_first+
-               MA/15.*
-               np.cos(np.radians(15.*ha_corr_first))*
-               np.tan(np.radians(dec_corr_first)))
-    dec_corr = dec_corr_first-MA*np.sin(np.radians(ha_corr_first*15.))
+    ha_corr = ha_corr_first+MA_correction_ha
+    dec_corr = dec_corr_first+MA_correction_dec
         
     ha_corr_error=np.sqrt(ha_corr_first_error**2+
                          (-np.cos(np.radians(ha_corr_first*15.))*
@@ -506,7 +526,8 @@ def apply_MA(ha_corr_first, ha_corr_first_error,
     
     return(ha_corr, ha_corr_error,
            dec_corr, dec_corr_error,
-           MA, MA_error)
+           MA, MA_error,
+           MA_correction_ha, MA_correction_dec)
 
 def apply_ME(ha_corr_first, ha_corr_first_error,
              dec_corr_first, dec_corr_first_error,
@@ -526,10 +547,15 @@ def apply_ME(ha_corr_first, ha_corr_first_error,
               (Index corrected calculated declination differences with errors)
          
        Output: ha_corr, ha_corr_error:
-               (NP corrected hour angles with errors)
+               (ME corrected hour angles with errors)
                dec_corr, dec_corr_error
-               MA, MA_error
-               (Value of MA and error)
+               (ME corrected declinations with errors)
+               ME, ME_error
+               (Value of ME and error)
+               ME_correction_ha:
+               (array of correction values to be added to ha_corr_first)
+               ME_correction_dec:
+               (array of correction values to be added to dec_corr_first)
     """
     
     #We calculate  Me in degree. 
@@ -585,15 +611,20 @@ def apply_ME(ha_corr_first, ha_corr_first_error,
     Delta=s*sxx-sx**2
         
     ME_error=s/Delta
+    
+    #Calculate correction arrays
+    ME_correction_ha=(-ME/15*
+                      np.sin(np.radians(ha_corr_first*15.))*
+                      np.tan(np.radians(dec_corr_first)))
+    
+    ME_correction_dec=-ME*np.cos(np.radians(ha_corr_first*15.))
                
     #Calculate corrected HA and DEC and their errors
         
-    ha_corr = (ha_corr_first-
-               ME/15*
-               np.sin(np.radians(ha_corr_first*15.))*
-               np.tan(np.radians(dec_corr_first)))
-    dec_corr = dec_corr_first-ME*np.cos(np.radians(ha_corr_first*15.))
-        
+    ha_corr = ha_corr_first+ME_correction_ha
+    
+    dec_corr = dec_corr_first+ME_correction_dec
+    
     ha_corr_error=np.sqrt(ha_corr_first_error**2+
                           (np.sin(np.radians(ha_corr_first*15.))*
                            np.tan(np.radians(dec_corr_first))*
@@ -618,7 +649,9 @@ def apply_ME(ha_corr_first, ha_corr_first_error,
     
     return(ha_corr, ha_corr_error,
            dec_corr, dec_corr_error,
-           ME, ME_error)
+           ME, ME_error,
+           ME_correction_ha,
+           ME_correction_dec)
 
 def apply_FO(ha_corr_first, ha_corr_first_error,
              dec_corr_first, dec_corr_first_error,
@@ -637,6 +670,8 @@ def apply_FO(ha_corr_first, ha_corr_first_error,
                (NP corrected hour angles with errors)
                FO, FO_error
                (value of FO and error)
+               FO_correction:
+               (array of correction values to be added to dec_corr_first)
     """
               
                                   
@@ -673,13 +708,16 @@ def apply_FO(ha_corr_first, ha_corr_first_error,
                           (np.cos(np.radians(ha_corr_first*15.))*FO_error)**2+
                           (FO*np.sin(np.radians(ha_corr_first*15.))*
                            ha_corr_first_error*15.)**2)
+                          
+    #Calculate correction array
+    FO_correction=-FO*np.cos(np.radians(ha_corr_first*15.))
     
-    #Calculate corrected ha
-    dec_corr = dec_corr_first-FO*np.cos(np.radians(ha_corr_first*15.))
+    #Calculate corrected dec
+    dec_corr = dec_corr_first+FO_correction
         
     print('FO[°]=',FO,'+-',FO_error,' with chi^2_red=',chi_2_red)
     
-    return (dec_corr, dec_corr_error, FO, FO_error)
+    return (dec_corr, dec_corr_error, FO, FO_error, FO_correction)
 
 def apply_DCES(dec_corr_first, dec_corr_first_error,
                dec_diff_corr, dec_diff_corr_error):
@@ -695,6 +733,9 @@ def apply_DCES(dec_corr_first, dec_corr_first_error,
                (DCES corrected hour angles with errors)
                DCES, DCES_error
                (value of DCES and error)
+               DCES_correction:
+               (array of correction values to be added to dec_corr_first)
+               
     """
     sxx = sum(np.sin(np.radians(dec_corr_first))**2*
               1/(dec_diff_corr_error)**2)
@@ -728,12 +769,15 @@ def apply_DCES(dec_corr_first, dec_corr_first_error,
                           (DCES*np.cos(np.radians(dec_corr_first))*
                            dec_corr_first_error)**2)
     
-    #Calculate corrected ha
-    dec_corr = dec_corr_first-DCES*np.sin(np.radians(dec_corr_first))
+    #Calculate correction array
+    DCES_correction=-DCES*np.sin(np.radians(dec_corr_first))
+    
+    #Calculate corrected dec
+    dec_corr = dec_corr_first+DCES_correction
         
     print('DCES[°]=',DCES,'+-',DCES_error,' with chi^2_red=',chi_2_red)
     
-    return (dec_corr, dec_corr_error, DCES, DCES_error)
+    return (dec_corr, dec_corr_error, DCES, DCES_error, DCES_correction)
 
 def apply_DCEC(dec_corr_first, dec_corr_first_error,
                dec_diff_corr, dec_diff_corr_error):
@@ -749,6 +793,8 @@ def apply_DCEC(dec_corr_first, dec_corr_first_error,
                (DCES corrected hour angles with errors)
                DCEC, DCEC_error
                (value of DCEC and error)
+               DCEC_correction:
+               (array of correction values to be added to dec_corr_first)
     """
     sxx = sum(np.cos(np.radians(dec_corr_first))**2*
               1/(dec_diff_corr_error)**2)
@@ -782,12 +828,15 @@ def apply_DCEC(dec_corr_first, dec_corr_first_error,
                           (DCEC*np.sin(np.radians(dec_corr_first))*
                            dec_corr_first_error)**2)
     
-    #Calculate corrected ha
+    #Calculate correction array
+    DCEC_correction = -DCEC*np.cos(np.radians(dec_corr_first))
+    
+    #Calculate corrected dec
     dec_corr = dec_corr_first-DCEC*np.cos(np.radians(dec_corr_first))
         
     print('DCEC[°]=',DCEC,'+-',DCEC_error,' with chi^2_red=',chi_2_red)
     
-    return (dec_corr, dec_corr_error, DCEC, DCEC_error)
+    return (dec_corr, dec_corr_error, DCEC, DCEC_error, DCEC_correction)
 
 def apply_DLIN(dec_corr_first, dec_corr_first_error,
                dec_diff_corr, dec_diff_corr_error):
@@ -803,6 +852,8 @@ def apply_DLIN(dec_corr_first, dec_corr_first_error,
                (DLIN corrected hour angles with errors)
                DLIN, DLIN_error
                (value of DLIN and error)
+               DLIN_correction
+               (array of correction values to be added to dec_corr_first)
     """
     sxx = sum(dec_corr_first**2*1/(dec_diff_corr_error)**2)
     sxy = sum(dec_diff_corr*dec_corr_first*1/(dec_diff_corr_error)**2)
@@ -835,12 +886,14 @@ def apply_DLIN(dec_corr_first, dec_corr_first_error,
                           (DLIN*
                            dec_corr_first_error)**2)
     
+    #Calculate correction array
+    DLIN_correction = -DLIN*dec_corr_first
     #Calculate corrected ha
-    dec_corr = dec_corr_first-DLIN*dec_corr_first
+    dec_corr = dec_corr_first + DLIN_correction
         
     print('DLIN=',DLIN,'+-',DLIN_error,' with chi^2_red=',chi_2_red)
     
-    return (dec_corr, dec_corr_error, DLIN, DLIN_error)
+    return (dec_corr, dec_corr_error, DLIN, DLIN_error, DLIN_correction)
 
 def apply_TF(ha_corr_first, ha_corr_first_error,
              dec_corr_first, dec_corr_first_error,
@@ -865,6 +918,10 @@ def apply_TF(ha_corr_first, ha_corr_first_error,
                dec_corr, dec_corr_error
                TF, TF_error
                (Value of MA and error)
+               TF_correction_ha:
+               (array of correction values to be added to ha_corr_first)
+               TF_correction_dec:
+               (array of correction values to be added to dec_corr_first)
     """
     
     #We calculate  TF in degree. 
@@ -945,21 +1002,24 @@ def apply_TF(ha_corr_first, ha_corr_first_error,
     Delta=s*sxx-sx**2
         
     TF_error=s/Delta
+    
+    #Calculate correction arrays
+    TF_correction_ha = (-TF/15.*
+                        np.cos(np.radians(phi))*
+                        np.sin(np.radians(ha_corr_first*15.))*
+                        1/np.cos(np.radians(dec_corr_first)))
+    
+    TF_correction_dec = (-TF*
+                         (np.cos(np.radians(phi))*
+                          np.cos(np.radians(ha_corr_first*15.))*
+                          np.sin(np.radians(dec_corr_first))-
+                          np.sin(np.radians(phi))*
+                          np.cos(np.radians(dec_corr_first))))
                
     #Calculate corrected HA and DEC and their errors
         
-    ha_corr = (ha_corr_first-
-               TF/15.*
-               np.cos(np.radians(phi))*
-               np.sin(np.radians(ha_corr_first*15.))*
-               1/np.cos(np.radians(dec_corr_first)))
-    dec_corr = (dec_corr_first-
-                TF*
-                (np.cos(np.radians(phi))*
-                 np.cos(np.radians(ha_corr_first*15.))*
-                 np.sin(np.radians(dec_corr_first))-
-                 np.sin(np.radians(phi))*
-                 np.cos(np.radians(dec_corr_first))))
+    ha_corr = ha_corr_first + TF_correction_ha
+    dec_corr = dec_corr_first + TF_correction_dec
     
         
     ha_corr_error=np.sqrt(ha_corr_first_error**2+
@@ -1000,7 +1060,8 @@ def apply_TF(ha_corr_first, ha_corr_first_error,
     
     return(ha_corr, ha_corr_error,
            dec_corr, dec_corr_error,
-           TF, TF_error)
+           TF, TF_error,
+           TF_correction_ha, TF_correction_dec)
 
 
     

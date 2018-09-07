@@ -93,12 +93,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
    #Fitting following Numerical Recipes by W. H. Press page 781 f.
     if term == 'CH' or term== 'all':
         (ha_corr, ha_corr_error,
-         CH, CH_error) = apply_CH(ha_corr_first, 
-                                  ha_corr_first_error,
-                                  dec_corr_first, 
-                                  dec_corr_first_error,
-                                  ha_diff_corr,
-                                  ha_diff_corr_error)
+         CH, CH_error, CH_correction) = apply_CH(ha_corr_first, 
+                                                 ha_corr_first_error,
+                                                 dec_corr_first, 
+                                                 dec_corr_first_error,
+                                                 ha_diff_corr,
+                                                 ha_diff_corr_error)
          
         #Save for later use in different variable names
         #Need that for 'all'
@@ -108,12 +108,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
       
     if term == 'NP' or term =='all':
         (ha_corr, ha_corr_error,
-         NP, NP_error) = apply_NP(ha_corr_first, 
-                                  ha_corr_first_error,
-                                  dec_corr_first, 
-                                  dec_corr_first_error,
-                                  ha_diff_corr,
-                                  ha_diff_corr_error)
+         NP, NP_error, NP_correction) = apply_NP(ha_corr_first, 
+                                                 ha_corr_first_error,
+                                                 dec_corr_first, 
+                                                 dec_corr_first_error,
+                                                 ha_diff_corr,
+                                                 ha_diff_corr_error)
         
         #Need that for 'all'
         dec_corr = dec_corr_first
@@ -124,10 +124,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         
         (ha_corr, ha_corr_error,
         dec_corr, dec_corr_error,
-        MA, MA_error) = apply_MA(ha_corr_first, ha_corr_first_error,
-                                 dec_corr_first, dec_corr_first_error,
-                                 ha_diff_corr, ha_diff_corr_error,
-                                 dec_diff_corr, dec_diff_corr_error)
+        MA, MA_error,
+        MA_correction_ha,
+        MA_correction_dec) = apply_MA(ha_corr_first, ha_corr_first_error,
+                                      dec_corr_first, dec_corr_first_error,
+                                      ha_diff_corr, ha_diff_corr_error,
+                                      dec_diff_corr, dec_diff_corr_error)
         
         ha_corr_error_MA=ha_corr_error
         dec_corr_error_MA=dec_corr_error
@@ -136,22 +138,25 @@ def fit_pointing_term(ha_obs,ha_obs_error,
 
         (ha_corr, ha_corr_error,
         dec_corr, dec_corr_error,
-        ME, ME_error) = apply_ME(ha_corr_first, ha_corr_first_error,
-                                 dec_corr_first, dec_corr_first_error,
-                                 ha_diff_corr, ha_diff_corr_error,
-                                 dec_diff_corr, dec_diff_corr_error)
+        ME, ME_error,
+        ME_correction_ha,
+        ME_correction_dec) = apply_ME(ha_corr_first, ha_corr_first_error,
+                                      dec_corr_first, dec_corr_first_error,
+                                      ha_diff_corr, ha_diff_corr_error,
+                                      dec_diff_corr, dec_diff_corr_error)
         
         ha_corr_error_ME=ha_corr_error
         dec_corr_error_ME=dec_corr_error
         
     if term == 'FO' or term == 'all':
         (dec_corr, dec_corr_error,
-         FO, FO_error) = apply_FO(ha_corr_first, 
-                                  ha_corr_first_error,
-                                  dec_corr_first, 
-                                  dec_corr_first_error,
-                                  dec_diff_corr,
-                                  dec_diff_corr_error)
+         FO, FO_error,
+         FO_correction) = apply_FO(ha_corr_first, 
+                                   ha_corr_first_error,
+                                   dec_corr_first, 
+                                   dec_corr_first_error,
+                                   dec_diff_corr,
+                                   dec_diff_corr_error)
          
         #Need that for 'all'
         ha_corr = ha_corr_first
@@ -160,10 +165,11 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         
     if term == 'DCES' or term == 'all':
         (dec_corr, dec_corr_error,
-         DCES, DCES_error) = apply_DCES(dec_corr_first,
-                                        dec_corr_first_error,
-                                        dec_diff_corr,
-                                        dec_diff_corr_error)
+         DCES, DCES_error,
+         DCES_correction) = apply_DCES(dec_corr_first,
+                                       dec_corr_first_error,
+                                       dec_diff_corr,
+                                       dec_diff_corr_error)
          
         #Need that for 'all'
         ha_corr= ha_corr_first
@@ -172,10 +178,11 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         
     if term == 'DCEC' or term == 'all':
         (dec_corr, dec_corr_error,
-         DCEC, DCEC_error) = apply_DCEC(dec_corr_first,
-                                        dec_corr_first_error,
-                                        dec_diff_corr,
-                                        dec_diff_corr_error)
+         DCEC, DCEC_error,
+         DCEC_correction) = apply_DCEC(dec_corr_first,
+                                       dec_corr_first_error,
+                                       dec_diff_corr,
+                                       dec_diff_corr_error)
          
         #Need that for 'all'
         ha_corr= ha_corr_first
@@ -184,10 +191,11 @@ def fit_pointing_term(ha_obs,ha_obs_error,
         
     if term == 'DLIN' :
         (dec_corr, dec_corr_error,
-         DCEC, DCEC_error) = apply_DLIN(dec_corr_first,
-                                        dec_corr_first_error,
-                                        dec_diff_corr,
-                                        dec_diff_corr_error)
+         DLIN, DLIN_error,
+         DLIN_correction) = apply_DLIN(dec_corr_first,
+                                       dec_corr_first_error,
+                                       dec_diff_corr,
+                                       dec_diff_corr_error)
          
         #Need that for 'all'
         ha_corr= ha_corr_first
@@ -197,10 +205,12 @@ def fit_pointing_term(ha_obs,ha_obs_error,
     if term == 'TF' or term == 'all':
         (ha_corr, ha_corr_error,
          dec_corr, dec_corr_error,
-         TF, TF_error) = apply_TF(ha_corr_first, ha_corr_first_error,
-                                 dec_corr_first, dec_corr_first_error,
-                                 ha_diff_corr, ha_diff_corr_error,
-                                 dec_diff_corr, dec_diff_corr_error)
+         TF, TF_error,
+         TF_correction_ha,
+         TF_correction_dec) = apply_TF(ha_corr_first, ha_corr_first_error,
+                                       dec_corr_first, dec_corr_first_error,
+                                       ha_diff_corr, ha_diff_corr_error,
+                                       dec_diff_corr, dec_diff_corr_error)
         
         ha_corr_error_TF=ha_corr_error
         dec_corr_error_TF=dec_corr_error
@@ -209,19 +219,13 @@ def fit_pointing_term(ha_obs,ha_obs_error,
          
 
     if term == 'all':
-        #Define site's latitude
-        phi=49.3978620896919
         
-        ha_corr = (ha_corr_first-
-                  CH/np.cos(np.radians(dec_corr_first))-
-                  NP*np.tan(np.radians(dec_corr_first))-
-                  -MA/15*np.cos(np.radians(15*ha_corr_first))*
-                  np.tan(np.radians(dec_corr_first))-
-                  ME/15*np.sin(np.radians(ha_corr_first*15.))*
-                  np.tan(np.radians(dec_corr_first))-
-                  TF/15*np.cos(np.radians(phi))*
-                  np.sin(np.radians(ha_corr_first*15.))*
-                  1/np.cos(np.radians(dec_corr_first)))
+        ha_corr = (ha_corr_first +
+                   CH_correction +
+                   NP_correction +
+                   MA_correction_ha +
+                   ME_correction_ha + 
+                   TF_correction_ha)
         
         ha_corr_error=np.sqrt(ha_corr_first_error**2+
                               ha_corr_error_CH**2+
@@ -230,18 +234,13 @@ def fit_pointing_term(ha_obs,ha_obs_error,
                               ha_corr_error_ME**2+
                               ha_corr_error_TF**2)
         
-        dec_corr=(dec_corr_first-
-                 MA*np.sin(np.radians(ha_corr_first*15.))-
-                 ME*np.cos(np.radians(ha_corr_first*15.))-
-                 DCES*np.sin(np.radians(dec_corr_first))-
-                 DCEC*np.cos(np.radians(dec_corr_first))-
-                 FO*np.cos(np.radians(ha_corr_first*15.))-
-                 TF*
-                 (np.cos(np.radians(phi))*
-                 np.cos(np.radians(ha_corr_first*15.))*
-                 np.sin(np.radians(dec_corr_first))-
-                 np.sin(np.radians(phi))*
-                 np.cos(np.radians(dec_corr_first))))
+        dec_corr=(dec_corr_first +
+                  MA_correction_dec +
+                  ME_correction_dec +
+                  DCES_correction +
+                  DCEC_correction +
+                  FO_correction +
+                  TF_correction_dec)
         
         dec_corr_error=np.sqrt(dec_corr_first_error**2+
                               dec_corr_error_MA**2+
