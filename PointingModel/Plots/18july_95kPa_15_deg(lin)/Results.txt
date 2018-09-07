@@ -1,0 +1,11 @@
+39 from 40 remaining
+IH[h] at 2018-07-18 = 0.0002 +- 0.0001  with chi^2_red= 23.23079983097986
+ID[°] at 2018-07-18 = 0.0556 +- 0.0051  with chi^2_red= 136.26518051413197
+DLIN= 0.0003065435468302412 +- -4.0967016575367824e-13  with chi^2_red= 26.798263100297916
+
+
+Temp=15°C
+press=95kPa
+
+terms=DLIN
+uncertainty=10arcsec

@@ -24,7 +24,7 @@ def reading_in_data(refr_corr=True):
     if refr_corr:
         file_path=(parrent_path /
                    'data' /
-                   'pointing_stars_coordinates_18july2018_13deg_95kPa_last_points_removed.txt')
+                   'pointing_stars_coordinates_18july2018_15deg_95kPa_last_points_removed.txt')
     else:
         file_path=(parrent_path /
                    'data' /

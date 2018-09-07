@@ -81,7 +81,7 @@ def fit_pointing_term(ha_obs, ha_obs_error,
     #IH and ID are always fitted
     #Define which terms are fitted if input is 'all'
     if terms == 'all':
-        terms = ['CH','NP','MA','ME','TF','FO','DCES','DCEC']
+        terms = ['CH','NP','MA','ME','TF','FO','DCES','DCEC','DLIN']
 
 
 
