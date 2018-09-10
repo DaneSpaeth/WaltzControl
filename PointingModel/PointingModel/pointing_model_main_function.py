@@ -9,7 +9,11 @@ import pathlib
 from pointing_model_functions import (apply_ID, apply_IH, apply_CH,
                                       apply_NP, apply_MA, apply_ME,
                                       apply_FO, apply_DCES, apply_DCEC,
-                                      apply_DLIN, apply_TF) 
+                                      apply_DLIN, apply_TF)
+
+from coord_operations import equ_to_altaz
+
+from mpl_toolkits.mplot3d import Axes3D
 
 # fits a general set of pointing terms to the residuals between
 # measured and calculated positions (ha: hour angle, dec: declination)
@@ -556,6 +560,7 @@ def fit_pointing_term(ha_obs, ha_obs_error,
                 plt.plot(dec_space,-0.033*np.ones(len(dec_space))*60,
                          color='black')
                 #plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+                
             plt.show()
             
             #Plotting as Field of View
@@ -642,6 +647,188 @@ def fit_pointing_term(ha_obs, ha_obs_error,
             plt.xlabel('LST [h]')
             
             plt.show()
+            
+            #Scatter Plots: Area indicating error (first correction)
+            #Plot Positive differences in blue, negatives in red
+            dec_pos_bool = dec_diff_corr > 0
+            dec_neg_bool = dec_diff_corr < 0
+            ha_pos_bool = ha_diff_corr > 0
+            ha_neg_bool = ha_diff_corr < 0
+            
+            dec_pos_sec_bool = dec_diff_corr_sec > 0
+            dec_neg_sec_bool = dec_diff_corr_sec < 0
+            ha_pos_sec_bool = ha_diff_corr_sec > 0
+            ha_neg_sec_bool = ha_diff_corr_sec < 0
+            
+            
+            
+            
+            
+            plt.figure()
+            plt.subplot(122)
+            plt.scatter(ha_obs[dec_pos_bool], dec_obs[dec_pos_bool],
+                        s=dec_diff_corr[dec_pos_bool]*1000,
+                        color= 'blue')
+            plt.scatter(ha_obs[dec_neg_bool], dec_obs[dec_neg_bool],
+                        s=abs(dec_diff_corr[dec_neg_bool]*1000),
+                        color= 'red')
+            
+            
+            plt.ylabel('observed Declination [°]')
+            plt.xlabel('observed Hour Angle [h]')
+            plt.title('(1st) corrected Declination difference \n as markersize')
+            
+            plt.subplot(121)
+            plt.scatter(ha_obs[ha_pos_bool], dec_obs[ha_pos_bool],
+                        s=abs(ha_diff_corr[ha_pos_bool]*15*1000),
+                        color='blue')
+            plt.scatter(ha_obs[ha_neg_bool], dec_obs[ha_neg_bool],
+                        s=abs(ha_diff_corr[ha_neg_bool]*15*1000),
+                        color='red')
+            
+            plt.ylabel('observed Declination [°]')
+            plt.xlabel('observed Hour Angle [h]')
+            plt.title('(1st) corrected Hour Angle difference \n as markersize')
+            
+            plt.show()
+            
+            #Scatter Plots: Area indicating error (second correction)
+            plt.figure()
+            plt.subplot(122)
+            plt.scatter(ha_obs[dec_pos_sec_bool], dec_obs[dec_pos_sec_bool],
+                        s=dec_diff_corr_sec[dec_pos_sec_bool]*1000,
+                        color= 'blue')
+            plt.scatter(ha_obs[dec_neg_sec_bool], dec_obs[dec_neg_sec_bool],
+                        s=abs(dec_diff_corr_sec[dec_neg_sec_bool]*1000),
+                        color= 'red')
+            
+            plt.ylabel('observed Declination [°]')
+            plt.xlabel('observed Hour Angle [h]')
+            plt.title('(2nd) corrected Declination difference \n as markersize')
+            
+            plt.subplot(121)
+            plt.scatter(ha_obs[ha_pos_sec_bool], dec_obs[ha_pos_sec_bool],
+                        s=abs(ha_diff_corr_sec[ha_pos_sec_bool]*15*1000),
+                        color='blue')
+            plt.scatter(ha_obs[ha_neg_sec_bool], dec_obs[ha_neg_sec_bool],
+                        s=abs(ha_diff_corr_sec[ha_neg_sec_bool]*15*1000),
+                        color='red')
+            
+            plt.xlabel('observed Declination [°]')
+            plt.ylabel('observed Hour Angle [h]')
+            plt.title('(2nd) corrected Hour Angle difference \n as markersize')
+            
+            plt.show()
+            
+            #3D Plots: error vs positions
+            
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(dec_obs,ha_obs,dec_diff_corr_sec)
+            
+            ax.set_xlabel('observed Declination [°]')
+            ax.set_ylabel('observed Hour Angle [h]')
+            ax.set_zlabel('dec_diff_corr_sec [°]')
+            
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(dec_obs,ha_obs,ha_diff_corr_sec)
+            
+            ax.set_xlabel('observed Declination [°]')
+            ax.set_ylabel('observed Hour Angle [h]')
+            ax.set_zlabel('ha_diff_corr_sec [h]')
+            
+            plt.show()
+            
+            #Also plot difference in alt az 
+            #and overplot diffraction correction
+            
+            #Calculate observed Alt and Az
+            alt_obs, az_obs = equ_to_altaz(ha_obs, dec_obs)
+            alt_calc, az_calc = equ_to_altaz(ha_calc, dec_calc)
+            
+            #Calculate corrected Alt and Az
+            alt_corr_first, az_corr_first = equ_to_altaz(ha_corr_first,
+                                                         dec_corr_first)
+            alt_corr, az_corr = equ_to_altaz(ha_corr, dec_corr)
+            
+            #Calculate uncorrected alt difference
+            alt_diff = alt_obs - alt_calc
+            
+            #Calculate corrected alt difference
+            alt_diff_corr_first = alt_obs - alt_corr_first
+            alt_diff_corr_sec = alt_obs - alt_corr
+            
+            def calc_refraction(alt):
+                """Calculate refraction in arcminutes
+                """
+                #Choose temp and press
+                temp = 15
+                press = 97
+                #Calculate temperature/pressure factor
+                factor= press/101*283/(273+temp)
+                #Calculate refraction in arcminutes
+                R=(1/np.tan(np.radians(alt+7.31/(alt+4.4))))*factor
+            
+                return R
+            
+            #Create alt array
+            alt_space=np.linspace(10,90,1000)
+            
+            #Plot
+            
+            plt.figure()
+            plt.subplot(221)
+            plt.plot(alt_obs,alt_diff*60,
+                     linestyle='none',marker='.',
+                     label=ObservationDate)
+            plt.xlabel('observed altitude [°]')
+            plt.ylabel("alt_diff = alt_obs-alt_calc [']")
+            plt.title('Initial Data')
+            plt.plot(alt_space,calc_refraction(alt_space),
+                     color='red', label='refraction')
+            
+            plt.plot(alt_space,0.033*np.ones(len(alt_space))*60,
+                     color='black',label='FOV')
+            plt.plot(alt_space,-0.033*np.ones(len(alt_space))*60,
+                     color='black')
+            
+            plt.subplot(222)
+            plt.plot(alt_obs,alt_diff_corr_first*60,
+                     linestyle='none',marker='.',
+                     label=ObservationDate)
+            plt.xlabel('observed altitude [°]')
+            plt.ylabel("alt_diff = alt_obs-alt_calc [']")
+            plt.title('First Correction')
+            plt.plot(alt_space,calc_refraction(alt_space),
+                     color='red', label='refraction')
+            
+            plt.plot(alt_space,0.033*np.ones(len(alt_space))*60,
+                     color='black',label='FOV')
+            plt.plot(alt_space,-0.033*np.ones(len(alt_space))*60,
+                     color='black')
+            
+            plt.subplot(224)
+            plt.plot(alt_obs,alt_diff_corr_sec*60,
+                     linestyle='none',marker='.',
+                     label=ObservationDate)
+            plt.xlabel('observed altitude [°]')
+            plt.ylabel("alt_diff_corr = alt_obs-alt_corr [']")
+            plt.title('Second correction')
+            plt.plot(alt_space,calc_refraction(alt_space),
+                     color='red', label='refraction')
+            
+            plt.plot(alt_space,0.033*np.ones(len(alt_space))*60,
+                     color='black',label='FOV')
+            plt.plot(alt_space,-0.033*np.ones(len(alt_space))*60,
+                     color='black')
+            plt.legend(loc="upper left", bbox_to_anchor=(1,1))
+                
+            plt.show()
+            
+            
+            
+            
             
             
             
